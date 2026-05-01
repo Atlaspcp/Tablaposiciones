@@ -54,20 +54,18 @@ def load_from_disk():
             return False
     return False
 
-# --- 2. ESTILOS CSS (Champions Estilo Resultados) ---
+# --- 2. ESTILOS CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
     html, body, [class*="css"] { font-family: 'Roboto', sans-serif; }
     
-    /* Contenedor General de Tablas y Resultados */
     .main-card {
         background: linear-gradient(180deg, #0d1a44 0%, #060b26 100%);
         border-radius: 8px; margin-bottom: 25px;
         border: 1px solid #1e2a5a; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
-    /* Estilos de Tabla de Posiciones */
     .group-header {
         background-color: #0d1a44; padding: 12px 15px; border-bottom: 2px solid #0052cc;
         font-weight: bold; font-size: 1.1em; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0;
@@ -78,8 +76,7 @@ st.markdown("""
     .stat-val { width: 40px; text-align: center; font-weight: bold; }
     .header-labels { display: flex; color: #5c78ff; font-size: 0.85em; }
 
-    /* Estilos de la Sección de Resultados (Simétrico) */
-    .results-title { text-align: center; color: white; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 300; }
+    .results-title { text-align: center; color: white; text-transform: uppercase; letter-spacing: 2px; margin-top: 20px; font-weight: 300; }
     .match-row {
         display: flex; align-items: center; justify-content: center;
         padding: 15px 20px; border-bottom: 1px solid #ffffff15;
@@ -88,7 +85,7 @@ st.markdown("""
     .match-team.home { justify-content: flex-start; }
     .match-team.away { justify-content: flex-end; text-align: right; }
     .match-score { 
-        width: 100px; text-align: center; font-size: 1.5em; font-weight: 700; 
+        width: 120px; text-align: center; font-size: 1.6em; font-weight: 700; 
         color: white; letter-spacing: 2px;
     }
     .match-logo { width: 32px; height: 32px; object-fit: contain; }
@@ -127,11 +124,10 @@ if 'equipos' not in st.session_state:
 
 PASSWORD_ADMIN = "admin123"
 
-# --- 5. BARRA LATERAL (LOGIN/LOGOUT) ---
+# --- 5. BARRA LATERAL ---
 with st.sidebar:
     st.title("🛡️ Panel de Control")
     if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-
     if not st.session_state.logged_in:
         pass_input = st.text_input("Contraseña de Admin", type="password", key="login_pass")
         if st.button("Ingresar", key="login_btn"):
@@ -172,32 +168,27 @@ if not st.session_state.logged_in:
     
     with tab_res:
         if not st.session_state.partidos:
-            st.info("Aún no se han registrado resultados.")
+            st.info("Aún no hay resultados registrados.")
         else:
             st.markdown('<h2 class="results-title">RESULTS</h2>', unsafe_allow_html=True)
-            html_res = '<div class="main-card">'
             
-            # Diccionario auxiliar para buscar logos rápidamente por nombre
+            # Construimos el HTML sin sangrías (espacios iniciales) para evitar el error de código
+            html_res = '<div class="main-card">'
             logos_map = {info['nombre']: info['logo'] for info in st.session_state.equipos.values()}
             
             for p in reversed(st.session_state.partidos):
-                logo_l = f"data:image/png;base64,{img_to_base64(logos_map.get(p['local']))}" if logos_map.get(p['local']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                logo_v = f"data:image/png;base64,{img_to_base64(logos_map.get(p['visitante']))}" if logos_map.get(p['visitante']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
+                l_logo_pil = logos_map.get(p['local'])
+                v_logo_pil = logos_map.get(p['visitante'])
                 
-                html_res += f"""
-                <div class="match-row">
-                    <div class="match-team home">
-                        <img src="{logo_l}" class="match-logo">
-                        <span>{p['local']}</span>
-                    </div>
-                    <div class="match-score">{p['goles_l']} - {p['goles_v']}</div>
-                    <div class="match-team away">
-                        <span>{p['visitante']}</span>
-                        <img src="{logo_v}" class="match-logo">
-                    </div>
-                </div>
-                """
-            st.markdown(html_res + '</div>', unsafe_allow_html=True)
+                logo_l = f"data:image/png;base64,{img_to_base64(l_logo_pil)}" if l_logo_pil else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
+                logo_v = f"data:image/png;base64,{img_to_base64(v_logo_pil)}" if v_logo_pil else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
+                
+                # IMPORTANTE: El HTML debe estar pegado al borde izquierdo en el string
+                fila = f'<div class="match-row"><div class="match-team home"><img src="{logo_l}" class="match-logo"><span>{p["local"]}</span></div><div class="match-score">{p["goles_l"]} - {p["goles_v"]}</div><div class="match-team away"><span>{p["visitante"]}</span><img src="{logo_v}" class="match-logo"></div></div>'
+                html_res += fila
+            
+            html_res += '</div>'
+            st.markdown(html_res, unsafe_allow_html=True)
 
 else:
     # --- VISTA ADMINISTRADOR ---
@@ -207,31 +198,27 @@ else:
         for id_eq, info in st.session_state.equipos.items():
             with st.expander(f"Editar {info['nombre']}"):
                 col1, col2 = st.columns(2)
-                n_name = col1.text_input("Nombre", value=info['nombre'], key=f"input_n_{id_eq}")
-                n_grp = col1.selectbox("Grupo", ["A", "B", "C", "D", "E"], index=ord(info['grupo'])-65, key=f"input_g_{id_eq}")
-                n_logo = col2.file_uploader("Logo", type=["png", "jpg"], key=f"input_l_{id_eq}")
-                if st.button("💾 Guardar Cambios Equipo", key=f"save_btn_{id_eq}"):
+                n_name = col1.text_input("Nombre", value=info['nombre'], key=f"n_{id_eq}")
+                n_grp = col1.selectbox("Grupo", ["A", "B", "C", "D", "E"], index=ord(info['grupo'])-65, key=f"g_{id_eq}")
+                n_logo = col2.file_uploader("Logo", type=["png", "jpg"], key=f"l_{id_eq}")
+                if st.button("💾 Guardar", key=f"btn_{id_eq}"):
                     st.session_state.equipos[id_eq]['nombre'] = n_name.upper()
                     st.session_state.equipos[id_eq]['grupo'] = n_grp
                     if n_logo: st.session_state.equipos[id_eq]['logo'] = Image.open(n_logo)
-                    save_to_disk()
-                    st.success("Guardado.")
-                    st.rerun()
+                    save_to_disk(); st.rerun()
 
     with tab_match:
-        g_sel = st.selectbox("Seleccionar Grupo", ["A", "B", "C", "D", "E"], key="admin_grupo_sel")
+        g_sel = st.selectbox("Grupo", ["A", "B", "C", "D", "E"], key="adm_g")
         eq_grupo = [info['nombre'] for info in st.session_state.equipos.values() if info['grupo'] == g_sel]
-        if len(eq_grupo) < 2: st.warning("Se necesitan más equipos.")
+        if len(eq_grupo) < 2: st.warning("Faltan equipos.")
         else:
             c1, c2 = st.columns(2)
-            local_eq = c1.selectbox("Local", eq_grupo, key="admin_local_sel")
-            visit_eq = c2.selectbox("Visitante", eq_grupo, key="admin_visit_sel")
-            goles_l = c1.number_input(f"Goles {local_eq}", min_value=0, step=1, key="admin_gl")
-            goles_v = c2.number_input(f"Goles {visit_eq}", min_value=0, step=1, key="admin_gv")
-            if st.button("💾 Guardar Resultado", key="admin_save_match"):
-                if local_eq == visit_eq: st.error("Mismo equipo.")
+            loc = c1.selectbox("Local", eq_grupo, key="adm_l")
+            vis = c2.selectbox("Visitante", eq_grupo, key="adm_v")
+            gl = c1.number_input(f"Goles {loc}", min_value=0, step=1, key="adm_gl")
+            gv = c2.number_input(f"Goles {vis}", min_value=0, step=1, key="adm_gv")
+            if st.button("💾 Guardar Partido", key="adm_save"):
+                if loc == vis: st.error("Mismo equipo.")
                 else:
-                    st.session_state.partidos.append({"grupo": g_sel, "local": local_eq, "visitante": visit_eq, "goles_l": goles_l, "goles_v": goles_v})
-                    save_to_disk()
-                    st.success("¡Resultado guardado!")
-                    st.rerun()
+                    st.session_state.partidos.append({"grupo": g_sel, "local": loc, "visitante": vis, "goles_l": gl, "goles_v": gv})
+                    save_to_disk(); st.success("Guardado"); st.rerun()
