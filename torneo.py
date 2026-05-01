@@ -68,14 +68,13 @@ st.markdown("""
 
     .group-header {
         background-color: #0d1a44; padding: 12px 15px; border-bottom: 2px solid #0052cc;
-        font-weight: bold; font-size: 0.9em; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0;
+        font-weight: bold; font-size: 0.85em; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0;
     }
-    .team-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ffffff10; font-size: 0.85em; }
-    .team-logo { width: 24px; height: 24px; margin-right: 12px; object-fit: contain; }
+    .team-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ffffff10; font-size: 0.8em; }
+    .team-logo { width: 22px; height: 22px; margin-right: 10px; object-fit: contain; }
     .team-name { flex-grow: 1; text-transform: uppercase; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     
-    /* Ajuste de ancho para las columnas de stats */
-    .stat-val { width: 30px; text-align: center; font-weight: bold; flex-shrink: 0; }
+    .stat-val { width: 28px; text-align: center; font-weight: bold; flex-shrink: 0; }
     .header-labels { display: flex; color: #5c78ff; font-size: 0.85em; }
 
     .results-title { text-align: center; color: white; text-transform: uppercase; letter-spacing: 2px; margin-top: 20px; font-weight: 300; }
@@ -103,16 +102,13 @@ def calcular_tablas():
     for p in st.session_state.partidos:
         l, v, gl, gv = p['local'], p['visitante'], p['goles_l'], p['goles_v']
         if l in stats_global and v in stats_global:
-            # Ambos jugaron
             stats_global[l]["PJ"] += 1
             stats_global[v]["PJ"] += 1
-            # Goles
             stats_global[l]["GF"] += gl
             stats_global[l]["GC"] += gv
             stats_global[v]["GF"] += gv
             stats_global[v]["GC"] += gl
             
-            # Resultado
             if gl > gv:
                 stats_global[l]["G"] += 1; stats_global[l]["PTS"] += 3
                 stats_global[v]["P"] += 1
@@ -123,7 +119,6 @@ def calcular_tablas():
                 stats_global[l]["E"] += 1; stats_global[l]["PTS"] += 1
                 stats_global[v]["E"] += 1; stats_global[v]["PTS"] += 1
     
-    # Diferencia de goles
     for e in stats_global:
         stats_global[e]["DG"] = stats_global[e]["GF"] - stats_global[e]["GC"]
             
@@ -146,7 +141,7 @@ with st.sidebar:
     st.title("🛡️ Panel de Control")
     if 'logged_in' not in st.session_state: st.session_state.logged_in = False
     if not st.session_state.logged_in:
-        pass_input = st.text_input("Contraseña de Admin", type="password", key="login_pass")
+        pass_input = st.text_input("Contraseña", type="password", key="login_pass")
         if st.button("Ingresar", key="login_btn"):
             if pass_input == PASSWORD_ADMIN:
                 st.session_state.logged_in = True
@@ -175,65 +170,39 @@ if not st.session_state.logged_in:
         cols = st.columns(2)
         for idx, g in enumerate(grupos):
             with cols[idx % 2]:
-                # Ordenar por PTS, luego DG, luego GF
                 equipos_g = sorted([info for name, info in stats.items() if info['grupo'] == g], 
                                    key=lambda x: (x['PTS'], x['DG'], x['GF']), reverse=True)
                 
-                # Cabecera con todas las columnas
-                html = f'''
-                <div class="main-card">
-                    <div class="group-header">
-                        <span>GROUP {g}</span>
-                        <div class="header-labels">
-                            <span class="stat-val">PJ</span>
-                            <span class="stat-val">G</span>
-                            <span class="stat-val">E</span>
-                            <span class="stat-val">P</span>
-                            <span class="stat-val">GF</span>
-                            <span class="stat-val">GC</span>
-                            <span class="stat-val">DG</span>
-                            <span class="stat-val">PTS</span>
-                        </div>
-                    </div>
-                '''
+                # HTML SIN ESPACIOS AL INICIO DE LÍNEA
+                html = f'<div class="main-card"><div class="group-header"><span>GROUP {g}</span><div class="header-labels"><span class="stat-val">PJ</span><span class="stat-val">G</span><span class="stat-val">E</span><span class="stat-val">P</span><span class="stat-val">GF</span><span class="stat-val">GC</span><span class="stat-val">DG</span><span class="stat-val">PTS</span></div></div>'
+                
                 for eq in equipos_g:
                     logo_src = f"data:image/png;base64,{img_to_base64(eq['logo'])}" if eq['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                    html += f'''
-                    <div class="team-row">
-                        <img src="{logo_src}" class="team-logo">
-                        <span class="team-name">{eq["nombre"]}</span>
-                        <span class="stat-val">{eq["PJ"]}</span>
-                        <span class="stat-val">{eq["G"]}</span>
-                        <span class="stat-val">{eq["E"]}</span>
-                        <span class="stat-val">{eq["P"]}</span>
-                        <span class="stat-val">{eq["GF"]}</span>
-                        <span class="stat-val">{eq["GC"]}</span>
-                        <span class="stat-val">{eq["DG"]}</span>
-                        <span class="stat-val">{eq["PTS"]}</span>
-                    </div>
-                    '''
-                st.markdown(html + '</div>', unsafe_allow_html=True)
+                    fila = f'<div class="team-row"><img src="{logo_src}" class="team-logo"><span class="team-name">{eq["nombre"]}</span><span class="stat-val">{eq["PJ"]}</span><span class="stat-val">{eq["G"]}</span><span class="stat-val">{eq["E"]}</span><span class="stat-val">{eq["P"]}</span><span class="stat-val">{eq["GF"]}</span><span class="stat-val">{eq["GC"]}</span><span class="stat-val">{eq["DG"]}</span><span class="stat-val">{eq["PTS"]}</span></div>'
+                    html += fila
+                
+                html += '</div>'
+                st.markdown(html, unsafe_allow_html=True)
     
     with tab_res:
         if not st.session_state.partidos:
-            st.info("Aún no hay resultados registrados.")
+            st.info("Aún no hay resultados.")
         else:
             st.markdown('<h2 class="results-title">RESULTS</h2>', unsafe_allow_html=True)
             html_res = '<div class="main-card">'
             logos_map = {info['nombre']: info['logo'] for info in st.session_state.equipos.values()}
             for p in reversed(st.session_state.partidos):
-                l_logo_pil = logos_map.get(p['local'])
-                v_logo_pil = logos_map.get(p['visitante'])
-                logo_l = f"data:image/png;base64,{img_to_base64(l_logo_pil)}" if l_logo_pil else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                logo_v = f"data:image/png;base64,{img_to_base64(v_logo_pil)}" if v_logo_pil else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                fila = f'<div class="match-row"><div class="match-team home"><img src="{logo_l}" class="match-logo"><span>{p["local"]}</span></div><div class="match-score">{p["goles_l"]} - {p["goles_v"]}</div><div class="match-team away"><span>{p["visitante"]}</span><img src="{logo_v}" class="match-logo"></div></div>'
-                html_res += fila
+                l_logo = logos_map.get(p['local'])
+                v_logo = logos_map.get(p['visitante'])
+                src_l = f"data:image/png;base64,{img_to_base64(l_logo)}" if l_logo else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
+                src_v = f"data:image/png;base64,{img_to_base64(v_logo)}" if v_logo else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
+                fila_res = f'<div class="match-row"><div class="match-team home"><img src="{src_l}" class="match-logo"><span>{p["local"]}</span></div><div class="match-score">{p["goles_l"]} - {p["goles_v"]}</div><div class="match-team away"><span>{p["visitante"]}</span><img src="{src_v}" class="match-logo"></div></div>'
+                html_res += fila_res
             st.markdown(html_res + '</div>', unsafe_allow_html=True)
 
 else:
-    # --- VISTA ADMINISTRADOR (Sin cambios en lógica, solo keys únicas) ---
+    # --- VISTA ADMINISTRADOR ---
     tab_mng, tab_match = st.tabs(["⚙️ GESTIONAR EQUIPOS", "⚽ REGISTRAR RESULTADO"])
-    
     with tab_mng:
         for id_eq, info in st.session_state.equipos.items():
             with st.expander(f"Editar {info['nombre']}"):
@@ -261,4 +230,4 @@ else:
                 if loc == vis: st.error("Mismo equipo.")
                 else:
                     st.session_state.partidos.append({"grupo": g_sel, "local": loc, "visitante": vis, "goles_l": gl, "goles_v": gv})
-                    save_to_disk(); st.success("Guardado"); st.rerun()
+                    save_to_disk(); st.rerun()
