@@ -7,7 +7,7 @@ import json
 import os
 
 # --- 1. CONFIGURACIÓN Y PERSISTENCIA ---
-st.set_page_config(page_title="Champions League App", layout="wide")
+st.set_page_config(page_title="Copa NAM", layout="wide")
 
 DB_FILE = "torneo_data.json"
 
@@ -134,7 +134,7 @@ if 'equipos' not in st.session_state:
         st.session_state.equipos = equipos_iniciales
         st.session_state.partidos = []
 
-PASSWORD_ADMIN = "admin123"
+PASSWORD_ADMIN = "organizadores2026"
 
 # --- 5. BARRA LATERAL ---
 with st.sidebar:
@@ -159,7 +159,7 @@ with st.sidebar:
             st.rerun()
 
 # --- 6. INTERFAZ PRINCIPAL ---
-st.title("🏆 UEFA CHAMPIONS LEAGUE")
+st.title("Copa NAM 2026")
 
 if not st.session_state.logged_in:
     tab_pos, tab_res = st.tabs(["📊 POSICIONES", "⚽ RESULTADOS"])
