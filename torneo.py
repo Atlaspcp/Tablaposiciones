@@ -7,7 +7,6 @@ import json
 import os
 
 # --- 1. CONFIGURACIÓN Y PERSISTENCIA ---
-# Aquí cambiamos el título que aparece en la pestaña del navegador
 st.set_page_config(page_title="COPA NAM", layout="wide")
 
 DB_FILE = "torneo_data.json"
@@ -47,25 +46,32 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS (PALETA CHAMPIONS + TEXTO BLANCO) ---
+# --- 2. ESTILOS CSS (FIJANDO COLOR BLANCO EN TÍTULOS) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
     
-    /* Fondo General de la App */
+    /* Fondo General */
     [data-testid="stAppViewContainer"] {
         background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important;
     }
-    
-    /* Forzar que los títulos de las pestañas (Tabs) sean blancos */
+
+    /* FORZAR BLANCO EN TÍTULOS (COPA NAM y otros h1/h2) */
+    h1, h2, h3, [data-testid="stHeader"] h1, .results-title {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    /* Forzar blanco en las letras de las pestañas (Tabs) */
     .stTabs [data-baseweb="tab"] p {
         color: white !important;
         font-weight: 700;
+        font-size: 1.1em;
     }
 
     html, body, [class*="css"] { font-family: 'Roboto', sans-serif; color: white !important; }
 
-    /* Tarjetas */
+    /* Tarjetas de grupos */
     .main-card {
         background: rgba(0, 10, 60, 0.6);
         border-radius: 12px; margin-bottom: 25px;
@@ -74,7 +80,6 @@ st.markdown("""
         backdrop-filter: blur(10px);
     }
 
-    /* Cabeceras de Tabla */
     .group-header {
         background: linear-gradient(90deg, #00124d 0%, #0027a3 100%);
         padding: 15px; border-bottom: 3px solid #00d4ff;
@@ -88,8 +93,11 @@ st.markdown("""
     .stat-val { width: 32px; text-align: center; font-weight: bold; flex-shrink: 0; color: white !important; }
     .header-labels { display: flex; color: #00d4ff; font-size: 0.9em; }
 
-    /* Estilo Resultados */
-    .results-title { text-align: center; color: white; text-transform: uppercase; letter-spacing: 4px; margin-top: 30px; font-weight: 900; font-size: 2.5em; }
+    /* Estilo de los Resultados */
+    .results-title { 
+        text-align: center; color: #ffffff !important; text-transform: uppercase; 
+        letter-spacing: 4px; margin-top: 30px; font-weight: 900; font-size: 2.5em; 
+    }
     .match-row { display: flex; align-items: center; justify-content: center; padding: 20px; border-bottom: 1px solid #ffffff08; }
     .match-team { flex: 1; display: flex; align-items: center; font-weight: 700; text-transform: uppercase; font-size: 1em; color: white !important; }
     .match-team.home { justify-content: flex-end; text-align: right; }
@@ -100,7 +108,6 @@ st.markdown("""
     }
     .match-logo { width: 40px; height: 40px; object-fit: contain; }
     
-    /* Botones */
     .stButton>button {
         background: linear-gradient(90deg, #00d4ff 0%, #0055ff 100%);
         color: white !important; border: none; font-weight: bold; border-radius: 20px;
@@ -153,7 +160,7 @@ with st.sidebar:
             st.session_state.clear(); st.rerun()
 
 # --- 6. INTERFAZ PRINCIPAL ---
-# Aquí cambiamos el título grande de la página
+# Título principal del torneo
 st.title("🏆 COPA NAM")
 
 if not st.session_state.logged_in:
@@ -171,8 +178,9 @@ if not st.session_state.logged_in:
                     html += f'<div class="team-row"><img src="{l_src}" class="team-logo"><span class="team-name">{eq["nombre"]}</span><span class="stat-val">{eq["PJ"]}</span><span class="stat-val">{eq["G"]}</span><span class="stat-val">{eq["E"]}</span><span class="stat-val">{eq["P"]}</span><span class="stat-val">{eq["GF"]}</span><span class="stat-val">{eq["GC"]}</span><span class="stat-val">{eq["DG"]}</span><span class="stat-val">{eq["PTS"]}</span></div>'
                 st.markdown(html + '</div>', unsafe_allow_html=True)
     with t2:
-        if not st.session_state.partidos: st.info("Sin resultados.")
+        if not st.session_state.partidos: st.info("Sin resultados registrados.")
         else:
+            # Aquí aplicamos la clase results-title que forzamos en el CSS
             st.markdown('<h1 class="results-title">RESULTADOS</h1>', unsafe_allow_html=True)
             html_res = '<div class="main-card">'
             l_map = {i['nombre']: i['logo'] for i in st.session_state.equipos.values()}
