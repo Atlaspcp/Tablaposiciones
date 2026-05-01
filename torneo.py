@@ -138,7 +138,7 @@ PASSWORD_ADMIN = "organizadores2026"
 
 # --- 5. BARRA LATERAL ---
 with st.sidebar:
-    st.title("🛡️ Panel de Control")
+    st.title("Zona Administradores")
     if 'logged_in' not in st.session_state: st.session_state.logged_in = False
     if not st.session_state.logged_in:
         pass_input = st.text_input("Contraseña", type="password", key="login_pass")
