@@ -7,7 +7,8 @@ import json
 import os
 
 # --- 1. CONFIGURACIÓN Y PERSISTENCIA ---
-st.set_page_config(page_title="Champions League App", layout="wide")
+# Aquí cambiamos el título que aparece en la pestaña del navegador
+st.set_page_config(page_title="COPA NAM", layout="wide")
 
 DB_FILE = "torneo_data.json"
 
@@ -46,7 +47,7 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS (PALETA CHAMPIONS) ---
+# --- 2. ESTILOS CSS (PALETA CHAMPIONS + TEXTO BLANCO) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
@@ -55,15 +56,14 @@ st.markdown("""
     [data-testid="stAppViewContainer"] {
         background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important;
     }
-    [data-testid="stHeader"] { background: rgba(0,0,0,0); }
     
-    /* Barra Lateral */
-    [data-testid="stSidebar"] {
-        background-color: #00021a !important;
-        border-right: 1px solid #00d4ff33;
+    /* Forzar que los títulos de las pestañas (Tabs) sean blancos */
+    .stTabs [data-baseweb="tab"] p {
+        color: white !important;
+        font-weight: 700;
     }
 
-    html, body, [class*="css"] { font-family: 'Roboto', sans-serif; color: white; }
+    html, body, [class*="css"] { font-family: 'Roboto', sans-serif; color: white !important; }
 
     /* Tarjetas */
     .main-card {
@@ -80,19 +80,18 @@ st.markdown("""
         padding: 15px; border-bottom: 3px solid #00d4ff;
         font-weight: 900; font-size: 0.9em; display: flex; 
         justify-content: space-between; border-radius: 12px 12px 0 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
     
     .team-row { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #ffffff08; font-size: 0.85em; }
     .team-logo { width: 26px; height: 26px; margin-right: 12px; object-fit: contain; }
-    .team-name { flex-grow: 1; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-    .stat-val { width: 32px; text-align: center; font-weight: bold; flex-shrink: 0; }
+    .team-name { flex-grow: 1; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; color: white !important; }
+    .stat-val { width: 32px; text-align: center; font-weight: bold; flex-shrink: 0; color: white !important; }
     .header-labels { display: flex; color: #00d4ff; font-size: 0.9em; }
 
     /* Estilo Resultados */
     .results-title { text-align: center; color: white; text-transform: uppercase; letter-spacing: 4px; margin-top: 30px; font-weight: 900; font-size: 2.5em; }
     .match-row { display: flex; align-items: center; justify-content: center; padding: 20px; border-bottom: 1px solid #ffffff08; }
-    .match-team { flex: 1; display: flex; align-items: center; font-weight: 700; text-transform: uppercase; font-size: 1em; letter-spacing: 1px; }
+    .match-team { flex: 1; display: flex; align-items: center; font-weight: 700; text-transform: uppercase; font-size: 1em; color: white !important; }
     .match-team.home { justify-content: flex-end; text-align: right; }
     .match-team.away { justify-content: flex-start; text-align: left; }
     .match-score { 
@@ -100,16 +99,12 @@ st.markdown("""
         color: #00d4ff; letter-spacing: 5px; text-shadow: 0 0 15px rgba(0,212,255,0.4);
     }
     .match-logo { width: 40px; height: 40px; object-fit: contain; }
-    .match-team.home .match-logo { order: 2; margin-left: 20px; }
-    .match-team.away .match-logo { order: 1; margin-right: 20px; }
     
-    /* Botones Streamlit */
+    /* Botones */
     .stButton>button {
         background: linear-gradient(90deg, #00d4ff 0%, #0055ff 100%);
-        color: white; border: none; font-weight: bold; border-radius: 20px;
-        transition: 0.3s;
+        color: white !important; border: none; font-weight: bold; border-radius: 20px;
     }
-    .stButton>button:hover { transform: scale(1.05); box-shadow: 0 0 15px #00d4ff88; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -144,7 +139,7 @@ if 'equipos' not in st.session_state:
 
 # --- 5. BARRA LATERAL ---
 with st.sidebar:
-    st.title("🛡️ Panel Admin")
+    st.title("🛡️ Panel COPA NAM")
     if 'logged_in' not in st.session_state: st.session_state.logged_in = False
     if not st.session_state.logged_in:
         p_in = st.text_input("Contraseña", type="password")
@@ -158,6 +153,9 @@ with st.sidebar:
             st.session_state.clear(); st.rerun()
 
 # --- 6. INTERFAZ PRINCIPAL ---
+# Aquí cambiamos el título grande de la página
+st.title("🏆 COPA NAM")
+
 if not st.session_state.logged_in:
     t1, t2 = st.tabs(["📊 POSICIONES", "⚽ RESULTADOS"])
     with t1:
