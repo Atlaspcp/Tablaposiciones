@@ -71,19 +71,18 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS (MÓVIL + COLORES) ---
+# --- 2. ESTILOS CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
     [data-testid="stAppViewContainer"] { background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important; }
     
-    /* Colores NAM */
     .txt-celeste { color: #7db1ff !important; }
     .txt-red { color: #ff3b3b !important; }
     .txt-white { color: #ffffff !important; }
     .txt-gold { color: #FFD700 !important; }
 
-    /* Sidebar Negro */
+    /* Barra lateral: Título en NEGRO */
     [data-testid="stSidebar"] h2 { color: #000000 !important; font-weight: 900; }
 
     h1, h2, h3, .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 900; }
@@ -107,25 +106,23 @@ st.markdown("""
     .stat-col { width: 45px; text-align: center; font-weight: bold; flex-shrink: 0; color: white !important; }
     .header-labels { display: flex; color: white !important; font-size: 0.85em; }
 
-    /* Fase Final */
     .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; min-width: 1000px; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 500px; width: 220px; }
+    .bracket-column h4 { color: white !important; text-align: center; font-weight: 900; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 6px; border: 1px solid #FFD70044; padding: 8px; margin: 15px 0; }
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 26px; text-align: center; border-radius: 2px; }
 
-    /* Resultados por Fecha */
     .date-divider { background: #FFD700; color: black; padding: 5px 20px; font-weight: 900; border-radius: 4px; margin: 20px 0 10px 0; display: inline-block; }
     
-    /* Goleadores */
-    .gol-header { display: flex; align-items: center; padding: 12px 15px; background: rgba(0,0,0,0.2); border-bottom: 2px solid #FFD700; min-width: 450px; }
+    .gol-header { display: flex; align-items: center; padding: 12px 15px; background: rgba(0,0,0,0.2); border-bottom: 2px solid #FFD700; min-width: 450px; color: white !important; }
     .gol-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ffffff10; min-width: 450px; }
     .gol-team-txt { width: 150px; text-align: center; color: #FFD700; font-size: 0.85em; }
     .gol-score-txt { width: 60px; text-align: center; font-weight: 900; color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LÓGICA DE NEGOCIO ---
+# --- 3. LÓGICA ---
 def get_team_info(name):
     for info in st.session_state.equipos.values():
         if info['nombre'] == name: return info
@@ -180,20 +177,24 @@ if not st.session_state.get('logged_in', False):
     with t_ff:
         ff = st.session_state.fase_final
         st.markdown('<div class="bracket-scroll"><div class="bracket-wrapper">', unsafe_allow_html=True)
-        col1_html = f'<div class="bracket-column"><h4 style="text-align:center">CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}</div>'
-        col2_html = f'<div class="bracket-column"><h4 style="text-align:center">SEMIFINAL</h4>{render_match(ff["semis"][0])}</div>'
+        col1 = f'<div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}</div>'
+        col2 = f'<div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][0])}</div>'
         
         logo_f = f"data:image/png;base64,{img_to_base64(st.session_state.logo_final)}" if st.session_state.logo_final else None
-        center_html = f'<div class="final-center">{"<img src="+logo_f+" width=150 style=\"filter:drop-shadow(0 0 10px #FFD700)\">" if logo_f else "<h2>FINAL</h2>"}<h1 style="color:white !important; margin:10px 0;">GRAN FINAL</h1>{render_match(ff["final"])}</div>'
+        center = f'<div class="final-center">{"<img src="+logo_f+" width=150 style=\"filter:drop-shadow(0 0 10px #FFD700)\">" if logo_f else "<h2>FINAL</h2>"}<h1 style="color:white !important; margin:10px 0;">GRAN FINAL</h1>{render_match(ff["final"])}</div>'
         
-        col4_html = f'<div class="bracket-column"><h4 style="text-align:center">SEMIFINAL</h4>{render_match(ff["semis"][1])}</div>'
-        col5_html = f'<div class="bracket-column"><h4 style="text-align:center">CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}</div>'
-        
-        st.markdown(col1_html + col2_html + center_html + col4_html + col5_html + '</div></div>', unsafe_allow_html=True)
+        col4 = f'<div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][1])}</div>'
+        col5 = f'<div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}</div>'
+        st.markdown(col1 + col2 + center + col4 + col5 + '</div></div>', unsafe_allow_html=True)
 
     with t_res:
         if st.session_state.partidos:
-            df = pd.DataFrame(st.session_state.partidos).sort_values(by="fecha", ascending=False)
+            # CORRECCIÓN DE ERROR: Manejar partidos sin el campo "fecha"
+            df = pd.DataFrame(st.session_state.partidos)
+            if "fecha" not in df.columns:
+                df["fecha"] = "S/D"
+            df = df.fillna("S/D").sort_values(by="fecha", ascending=False)
+            
             fechas = df['fecha'].unique()
             l_map = {i['nombre']: i['logo'] for i in st.session_state.equipos.values()}
             
@@ -208,7 +209,7 @@ if not st.session_state.get('logged_in', False):
 
     with t_gol:
         if st.session_state.goleadores:
-            html_gol = '<div class="main-card"><div class="gol-header"><span style="flex-grow:1">JUGADOR</span><span class="gol-team-txt" style="color:white">EQUIPO</span><span class="gol-score-txt" style="color:white">GOLES</span></div>'
+            html_gol = '<div class="main-card"><div class="gol-header"><span style="flex-grow:1">JUGADOR</span><span class="gol-team-txt" style="color:white !important">EQUIPO</span><span class="gol-score-txt" style="color:white !important">GOLES</span></div>'
             for g in st.session_state.goleadores:
                 html_gol += f'<div class="gol-row"><span class="gol-name">{g["nombre"]}</span><span class="gol-team-txt">{g["equipo"]}</span><span class="gol-score-txt">{g["goles"]}</span></div>'
             st.markdown(html_gol + '</div>', unsafe_allow_html=True)
@@ -224,8 +225,7 @@ with st.sidebar:
         adm_t = st.tabs(["LOGOS", "EQ", "GR", "ELIM", "GOL", "💾"])
         
         with adm_t[0]:
-            lt = st.file_uploader("Logo Principal", type=["png", "jpg"])
-            lf = st.file_uploader("Logo Final", type=["png", "jpg"])
+            lt, lf = st.file_uploader("Logo Principal"), st.file_uploader("Logo Final")
             if st.button("Guardar Logos"):
                 if lt: st.session_state.logo_torneo = Image.open(lt)
                 if lf: st.session_state.logo_final = Image.open(lf)
@@ -243,14 +243,11 @@ with st.sidebar:
 
         with adm_t[2]:
             eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
-            fecha_p = st.date_input("Fecha del Partido", datetime.now())
+            fecha_p = st.date_input("Fecha", datetime.now())
             l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
             gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
             if st.button("Registrar Partido"):
-                st.session_state.partidos.append({
-                    "fecha": str(fecha_p), "local": l, "visitante": v, 
-                    "goles_l": gl, "goles_v": gv
-                })
+                st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
                 save_to_disk(); st.rerun()
 
         with adm_t[3]:
@@ -264,38 +261,34 @@ with st.sidebar:
                         st.session_state.fase_final[f]["gv"] = st.number_input("G2", value=st.session_state.fase_final[f]["gv"])
                     else:
                         for i in range(len(st.session_state.fase_final[f])):
-                            st.session_state.fase_final[f][i]["L"] = st.selectbox(f"{f} L{i}", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[f][i]["L"]) if st.session_state.fase_final[f][i]["L"] in eqs_ko else 0, key=f"l{f}{i}")
-                            st.session_state.fase_final[f][i]["V"] = st.selectbox(f"{f} V{i}", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[f][i]["V"]) if st.session_state.fase_final[f][i]["V"] in eqs_ko else 0, key=f"v{f}{i}")
-                            st.session_state.fase_final[f][i]["gl"] = st.number_input(f"GL {f}{i}", value=st.session_state.fase_final[f][i]["gl"], key=f"gl{f}{i}")
-                            st.session_state.fase_final[f][i]["gv"] = st.number_input(f"GV {f}{i}", value=st.session_state.fase_final[f][i]["gv"], key=f"gv{f}{i}")
+                            st.session_state.fase_final[f][i]["L"] = st.selectbox(f"L{i}", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[f][i]["L"]) if st.session_state.fase_final[f][i]["L"] in eqs_ko else 0, key=f"l{f}{i}")
+                            st.session_state.fase_final[f][i]["V"] = st.selectbox(f"V{i}", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[f][i]["V"]) if st.session_state.fase_final[f][i]["V"] in eqs_ko else 0, key=f"v{f}{i}")
+                            st.session_state.fase_final[f][i]["gl"] = st.number_input(f"GL{i}", value=st.session_state.fase_final[f][i]["gl"], key=f"gl{f}{i}")
+                            st.session_state.fase_final[f][i]["gv"] = st.number_input(f"GV{i}", value=st.session_state.fase_final[f][i]["gv"], key=f"gv{f}{i}")
             if st.button("Guardar Eliminatoria"): save_to_disk(); st.rerun()
 
         with adm_t[4]:
             n = st.text_input("Jugador").upper()
             e = st.selectbox("Equipo", eqs)
             g = st.number_input("Goles", 0)
-            if st.button("Añadir Goleador"):
+            if st.button("Añadir"):
                 st.session_state.goleadores.append({"nombre": n, "equipo": e, "goles": g})
                 save_to_disk(); st.rerun()
             for i, gol in enumerate(st.session_state.goleadores):
                 c1, c2, c3, c4 = st.columns([2,1,1,1])
-                c1.write(f"{gol['nombre']}")
+                c1.write(gol['nombre'])
                 if c2.button("🔼", key=f"u{i}") and i > 0:
                     st.session_state.goleadores[i], st.session_state.goleadores[i-1] = st.session_state.goleadores[i-1], st.session_state.goleadores[i]
                     save_to_disk(); st.rerun()
-                if c3.button("🔽", key=f"d{i}") and i < len(st.session_state.goleadores)-1:
-                    st.session_state.goleadores[i], st.session_state.goleadores[i+1] = st.session_state.goleadores[i+1], st.session_state.goleadores[i]
-                    save_to_disk(); st.rerun()
-                if c4.button("🗑️", key=f"del{i}"):
+                if c4.button("🗑️", key=f"d{i}"):
                     st.session_state.goleadores.pop(i)
                     save_to_disk(); st.rerun()
 
         with adm_t[5]:
-            st.subheader("Respaldos")
             if os.path.exists(DB_FILE):
                 with open(DB_FILE, "r") as f:
-                    st.download_button("📥 Descargar Base de Datos", f.read(), f"NAM_BACKUP_{datetime.now().strftime('%d_%m')}.json", "application/json")
-            archivo_subido = st.file_uploader("Restaurar desde JSON", type=["json"])
-            if archivo_subido and st.button("🔴 RESTAURAR AHORA"):
-                with open(DB_FILE, "wb") as f: f.write(archivo_subido.getbuffer())
+                    st.download_button("📥 Descargar JSON", f.read(), f"BACKUP_{datetime.now().strftime('%d_%m')}.json")
+            subido = st.file_uploader("Restaurar JSON")
+            if subido and st.button("🔴 RESTAURAR"):
+                with open(DB_FILE, "wb") as f: f.write(subido.getbuffer())
                 st.rerun()
