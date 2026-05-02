@@ -71,7 +71,7 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS (MÓVIL + ALINEACIÓN GRID) ---
+# --- 2. ESTILOS CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
@@ -88,39 +88,42 @@ st.markdown("""
     h1, h2, h3, .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 900; }
     .nam-title { font-size: clamp(2.5em, 8vw, 4.5em); text-align: center; font-weight: 900; letter-spacing: -2px; line-height: 1; color: white; margin-bottom: 20px; }
 
-    /* Cartas Principales */
     .main-card {
         background: rgba(0, 10, 60, 0.6); border-radius: 12px; margin-bottom: 25px;
         border: 1px solid #FFD70033; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
         overflow-x: auto;
     }
 
-    /* SISTEMA GRID PARA POSICIONES */
+    /* GRID PARA POSICIONES */
     .grid-posiciones {
         display: grid;
-        grid-template-columns: 1fr 40px 40px 40px 40px 40px 40px 40px 45px;
+        grid-template-columns: 2fr repeat(8, 45px);
         align-items: center;
-        min-width: 600px;
+        min-width: 650px;
+        padding: 10px 15px;
     }
-    
     .group-header-grid {
         background: linear-gradient(90deg, #00124d 0%, #ff3b3b33 100%);
-        padding: 12px 15px; border-bottom: 3px solid #FFD700; font-weight: 900;
+        border-bottom: 3px solid #FFD700; font-weight: 900; color: white !important;
     }
-    
-    .row-grid { padding: 10px 15px; border-bottom: 1px solid #ffffff10; font-size: 0.85em; }
-    .team-cell { display: flex; align-items: center; font-weight: 700; text-transform: uppercase; }
     .stat-cell { text-align: center; font-weight: bold; color: white !important; }
 
-    /* SISTEMA GRID PARA GOLEADORES */
+    /* GRID PARA GOLEADORES (Header y Filas iguales) */
     .grid-goleadores {
         display: grid;
-        grid-template-columns: 1fr 180px 80px;
+        grid-template-columns: 2fr 1.5fr 1fr;
         align-items: center;
         min-width: 500px;
+        padding: 10px 15px;
+        border-bottom: 1px solid #ffffff10;
     }
-    .gol-header-grid { padding: 12px 15px; border-bottom: 2px solid #FFD700; font-weight: 900; background: rgba(0,0,0,0.2); }
-    .gol-row-grid { padding: 10px 15px; border-bottom: 1px solid #ffffff10; }
+    .gol-header-grid { 
+        border-bottom: 2px solid #FFD700; 
+        font-weight: 900; 
+        background: rgba(0,0,0,0.2); 
+        color: white !important;
+    }
+    .gol-txt-center { text-align: center; }
 
     /* FASE FINAL */
     .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
@@ -134,7 +137,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LÓGICA ---
+# --- 3. LÓGICA DE NEGOCIO ---
 def get_team_info(name):
     for info in st.session_state.equipos.values():
         if info['nombre'] == name: return info
@@ -201,25 +204,49 @@ if not st.session_state.get('logged_in', False):
             for eq in eq_g:
                 img = f"data:image/png;base64,{img_to_base64(eq['logo'])}" if eq['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
                 html += f'''
-                <div class="grid-posiciones row-grid">
-                    <div class="team-cell"><img src="{img}" style="width:24px; margin-right:12px;">{eq["nombre"]}</div>
+                <div class="grid-posiciones" style="border-bottom: 1px solid #ffffff10; font-size: 0.85em;">
+                    <div style="display:flex; align-items:center;"><img src="{img}" style="width:24px; margin-right:12px;">{eq["nombre"]}</div>
                     <span class="stat-cell">{eq["PJ"]}</span><span class="stat-cell">{eq["G"]}</span><span class="stat-cell">{eq["E"]}</span><span class="stat-cell">{eq["P"]}</span>
-                    <span class="stat-cell">{eq["GF"]}</span><span class="stat-cell">{eq["GC"]}</span><span class="stat-cell">{eq["DG"]}</span><span class="stat-cell" style="color:#FFD700 !important">{eq["PTS"]}</span>
+                    <span class="stat-cell">{eq["GF"]}</span><span class="stat-cell">{eq["GC"]}</span><span class="stat-cell">{eq["DG"]}</span>
+                    <span class="stat-cell" style="color:#FFD700 !important">{eq["PTS"]}</span>
                 </div>'''
             st.markdown(html + '</div>', unsafe_allow_html=True)
 
     with t_ff:
         ff = st.session_state.fase_final
-        st.markdown('<div class="bracket-scroll"><div class="bracket-wrapper">', unsafe_allow_html=True)
-        col1 = f'<div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}</div>'
-        col2 = f'<div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][0])}</div>'
+        logo_f = f"data:image/png;base64,{img_to_base64(st.session_state.logo_final)}" if st.session_state.logo_final else ""
         
-        logo_f = f"data:image/png;base64,{img_to_base64(st.session_state.logo_final)}" if st.session_state.logo_final else None
-        center = f'<div class="final-center">{"<img src="+logo_f+" width=160 style=\"filter:drop-shadow(0 0 15px #FFD700)\">" if logo_f else "<h2>FINAL</h2>"}<h1 style="color:white !important; margin:15px 0;">GRAN FINAL</h1>{render_match(ff["final"])}</div>'
-        
-        col4 = f'<div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][1])}</div>'
-        col5 = f'<div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}</div>'
-        st.markdown(col1 + col2 + center + col4 + col5 + '</div></div>', unsafe_allow_html=True)
+        # Un solo bloque de Markdown para evitar errores de renderizado
+        html_ff = f'''
+        <div class="bracket-scroll">
+            <div class="bracket-wrapper">
+                <div class="bracket-column">
+                    <h4>CUARTOS</h4>
+                    {render_match(ff["cuartos"][0])}
+                    {render_match(ff["cuartos"][1])}
+                </div>
+                <div class="bracket-column">
+                    <h4>SEMIFINAL</h4>
+                    {render_match(ff["semis"][0])}
+                </div>
+                <div class="final-center">
+                    {"<img src='"+logo_f+"' width=160 style='filter:drop-shadow(0 0 15px #FFD700)'>" if logo_f else "<h2>FINAL</h2>"}
+                    <h1 style="color:white !important; margin:15px 0;">GRAN FINAL</h1>
+                    {render_match(ff["final"])}
+                </div>
+                <div class="bracket-column">
+                    <h4>SEMIFINAL</h4>
+                    {render_match(ff["semis"][1])}
+                </div>
+                <div class="bracket-column">
+                    <h4>CUARTOS</h4>
+                    {render_match(ff["cuartos"][2])}
+                    {render_match(ff["cuartos"][3])}
+                </div>
+            </div>
+        </div>
+        '''
+        st.markdown(html_ff, unsafe_allow_html=True)
 
     with t_res:
         if st.session_state.partidos:
@@ -233,7 +260,12 @@ if not st.session_state.get('logged_in', False):
                 for _, p in df[df['fecha'] == f].iterrows():
                     s_l = f"data:image/png;base64,{img_to_base64(l_map.get(p['local']))}" if l_map.get(p['local']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
                     s_v = f"data:image/png;base64,{img_to_base64(l_map.get(p['visitante']))}" if l_map.get(p['visitante']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                    html_res += f'<div style="display:flex; align-items:center; justify-content:center; padding:15px; border-bottom:1px solid #ffffff11; min-width:500px;"><div style="flex:1; text-align:right;">{p["local"]} <img src="{s_l}" width="24"></div><div style="width:110px; text-align:center; color:#FFD700; font-weight:900; font-size:1.5em;">{p["goles_l"]}-{p["goles_v"]}</div><div style="flex:1; text-align:left;"><img src="{s_v}" width="24"> {p["visitante"]}</div></div>'
+                    html_res += f'''
+                    <div style="display:flex; align-items:center; justify-content:center; padding:15px; border-bottom:1px solid #ffffff11; min-width:500px;">
+                        <div style="flex:1; text-align:right;">{p["local"]} <img src="{s_l}" width="24"></div>
+                        <div style="width:110px; text-align:center; color:#FFD700; font-weight:900; font-size:1.5em;">{p["goles_l"]}-{p["goles_v"]}</div>
+                        <div style="flex:1; text-align:left;"><img src="{s_v}" width="24"> {p["visitante"]}</div>
+                    </div>'''
                 st.markdown(html_res + '</div>', unsafe_allow_html=True)
 
     with t_gol:
@@ -241,14 +273,16 @@ if not st.session_state.get('logged_in', False):
             html_gol = f'''
             <div class="main-card">
                 <div class="grid-goleadores gol-header-grid">
-                    <span>JUGADOR</span><span style="text-align:center">EQUIPO</span><span style="text-align:center">GOLES</span>
+                    <span>JUGADOR</span>
+                    <span class="gol-txt-center">EQUIPO</span>
+                    <span class="gol-txt-center">GOLES</span>
                 </div>'''
             for g in st.session_state.goleadores:
                 html_gol += f'''
-                <div class="grid-goleadores gol-row-grid">
+                <div class="grid-goleadores">
                     <span style="font-weight:700; text-transform:uppercase;">{g["nombre"]}</span>
-                    <span class="gol-team-txt">{g["equipo"]}</span>
-                    <span class="gol-score-txt">{g["goles"]}</span>
+                    <span class="gol-txt-center" style="color:#FFD700; font-size:0.85em;">{g["equipo"]}</span>
+                    <span class="gol-txt-center" style="font-weight:900;">{g["goles"]}</span>
                 </div>'''
             st.markdown(html_gol + '</div>', unsafe_allow_html=True)
 
@@ -308,7 +342,7 @@ with st.sidebar:
                 st.session_state.goleadores.append({"nombre": n, "equipo": e, "goles": g})
                 save_to_disk(); st.rerun()
             for i, gol in enumerate(st.session_state.goleadores):
-                c1, c2, c3, c4 = st.columns([2,1,1,1])
+                c1, c2, c4 = st.columns([2,1,1])
                 c1.write(gol['nombre'])
                 if c2.button("🔼", key=f"u{i}") and i > 0:
                     st.session_state.goleadores[i], st.session_state.goleadores[i-1] = st.session_state.goleadores[i-1], st.session_state.goleadores[i]
