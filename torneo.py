@@ -7,7 +7,7 @@ import json
 import os
 
 # --- 1. CONFIGURACIÓN Y PERSISTENCIA ---
-st.set_page_config(page_title="COPA NAM", layout="wide")
+st.set_page_config(page_title="NAM 2026", layout="wide")
 
 DB_FILE = "torneo_data.json"
 
@@ -61,125 +61,116 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS ---
+# --- 2. ESTILOS CSS PERSONALIZADOS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
+    
     [data-testid="stAppViewContainer"] { background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important; }
-    h1, h2, h3, [data-testid="stHeader"] h1, .results-title { color: #ffffff !important; opacity: 1 !important; }
-    .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 700; font-size: 1.1em; }
-    html, body, [class*="css"] { font-family: 'Roboto', sans-serif; color: white !important; }
+    
+    /* Colores NAM */
+    .txt-celeste { color: #7db1ff !important; }
+    .txt-red { color: #ff3b3b !important; }
+    .txt-white { color: #ffffff !important; }
+
+    h1, h2, h3, .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 900; }
+    
+    /* Título principal NAM 2026 */
+    .nam-title { font-size: 4em; text-align: center; font-weight: 900; margin-bottom: 0px; letter-spacing: -2px; }
 
     .main-card {
         background: rgba(0, 10, 60, 0.6); border-radius: 12px; margin-bottom: 25px;
-        border: 1px solid #00d4ff33; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
+        border: 1px solid #7db1ff33; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
     }
+    
     .group-header {
-        background: linear-gradient(90deg, #00124d 0%, #0027a3 100%);
-        padding: 12px; border-bottom: 3px solid #00d4ff; font-weight: 900; font-size: 0.85em;
+        background: linear-gradient(90deg, #00124d 0%, #ff3b3b44 100%);
+        padding: 12px; border-bottom: 3px solid #7db1ff; font-weight: 900;
         display: flex; justify-content: space-between; border-radius: 12px 12px 0 0;
     }
-    .team-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ffffff10; font-size: 0.8em; }
-    .team-logo { width: 22px; height: 22px; margin-right: 10px; object-fit: contain; }
-    .team-name { flex-grow: 1; text-transform: uppercase; font-weight: 700; }
-    .stat-val { width: 30px; text-align: center; font-weight: bold; flex-shrink: 0; }
-    .header-labels { display: flex; color: #00d4ff; font-size: 0.9em; }
 
-    /* Bracket Estilos */
-    .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; min-width: 1000px; }
+    .team-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ffffff10; font-size: 0.9em; }
+    .team-logo { width: 24px; height: 24px; margin-right: 12px; object-fit: contain; }
+    .team-name { flex-grow: 1; text-transform: uppercase; font-weight: 700; color: #ffffff; }
+    .stat-val { width: 35px; text-align: center; font-weight: bold; color: #7db1ff; }
+    .header-labels { display: flex; color: #7db1ff; font-size: 0.8em; }
+
+    /* Fase Final */
+    .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 700px; width: 18%; }
-    .match-box-ko { background: rgba(0, 20, 80, 0.8); border: 1px solid #00d4ff55; border-radius: 4px; padding: 5px; margin: 10px 0; }
-    .team-row-ko { display: flex; align-items: center; justify-content: space-between; padding: 4px; border-bottom: 1px solid #ffffff11; font-size: 0.75em; }
-    .ko-logo { width: 18px; height: 18px; object-fit: contain; margin-right: 5px; }
-    .ko-name { flex-grow: 1; text-transform: uppercase; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
-    .ko-score { background: #00d4ff; color: #000; font-weight: 900; width: 22px; text-align: center; border-radius: 2px; }
-    .final-center { width: 24%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 6px; border: 1px solid #ff3b3b44; padding: 6px; margin: 10px 0; }
+    .ko-score { background: #ff3b3b; color: white; font-weight: 900; width: 24px; text-align: center; border-radius: 2px; }
+    .final-logo-img { width: 150px; filter: drop-shadow(0 0 20px #7db1ff); margin-bottom: 20px; }
+
+    /* Resultados */
+    .match-score { color: #7db1ff; font-size: 2em; font-weight: 900; text-shadow: 0 0 10px #7db1ff44; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LÓGICA DE NEGOCIO ---
+# --- 3. LÓGICA ---
 def get_team_info(name):
     for info in st.session_state.equipos.values():
         if info['nombre'] == name: return info
     return {"nombre": name, "logo": None}
 
 def render_match(match):
-    t1 = get_team_info(match["L"])
-    t2 = get_team_info(match["V"])
-    l1 = f"data:image/png;base64,{img_to_base64(t1['logo'])}" if t1['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-    l2 = f"data:image/png;base64,{img_to_base64(t2['logo'])}" if t2['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-    n1 = t1['nombre'] if t1['nombre'] else "---"
-    n2 = t2['nombre'] if t2['nombre'] else "---"
-    return f'<div class="match-box-ko"><div class="team-row-ko"><img src="{l1}" class="ko-logo"><span class="ko-name">{n1}</span><span class="ko-score">{match["gl"]}</span></div><div class="team-row-ko"><img src="{l2}" class="ko-logo"><span class="ko-name">{n2}</span><span class="ko-score">{match["gv"]}</span></div></div>'
+    t1, t2 = get_team_info(match["L"]), get_team_info(match["V"])
+    img1 = f"data:image/png;base64,{img_to_base64(t1['logo'])}" if t1['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
+    img2 = f"data:image/png;base64,{img_to_base64(t2['logo'])}" if t2['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
+    n1, n2 = (t1['nombre'] or "---"), (t2['nombre'] or "---")
+    return f'<div class="match-box-ko"><div class="team-row"><img src="{img1}" class="team-logo"><span class="team-name" style="font-size:0.7em">{n1}</span><span class="ko-score">{match["gl"]}</span></div><div class="team-row"><img src="{img2}" class="team-logo"><span class="team-name" style="font-size:0.7em">{n2}</span><span class="ko-score">{match["gv"]}</span></div></div>'
 
 def calcular_tablas():
-    stats = {}
-    for info in st.session_state.equipos.values():
-        stats[info['nombre']] = {"nombre": info['nombre'], "PJ": 0, "G": 0, "E": 0, "P": 0, "GF": 0, "GC": 0, "DG": 0, "PTS": 0, "grupo": info['grupo'], "logo": info['logo']}
+    stats = {info['nombre']: {"nombre": info['nombre'], "PJ": 0, "G": 0, "E": 0, "P": 0, "DG": 0, "PTS": 0, "grupo": info['grupo'], "logo": info['logo']} for info in st.session_state.equipos.values()}
     for p in st.session_state.partidos:
         l, v, gl, gv = p['local'], p['visitante'], p['goles_l'], p['goles_v']
         if l in stats and v in stats:
             stats[l]["PJ"] += 1; stats[v]["PJ"] += 1
-            stats[l]["GF"] += gl; stats[l]["GC"] += gv
-            stats[v]["GF"] += gv; stats[v]["GC"] += gl
+            stats[l]["DG"] += (gl-gv); stats[v]["DG"] += (gv-gl)
             if gl > gv: stats[l]["G"] += 1; stats[l]["PTS"] += 3; stats[v]["P"] += 1
             elif gv > gl: stats[v]["G"] += 1; stats[v]["PTS"] += 3; stats[l]["P"] += 1
             else: stats[l]["E"] += 1; stats[l]["PTS"] += 1; stats[v]["E"] += 1; stats[v]["PTS"] += 1
-    for e in stats: stats[e]["DG"] = stats[e]["GF"] - stats[e]["GC"]
     return stats
 
 # --- 4. INICIALIZACIÓN ---
 if 'equipos' not in st.session_state:
     if not load_from_disk():
         st.session_state.equipos = {f"ID_{i}": {"nombre": f"EQUIPO {i}", "grupo": chr(64 + ((i-1) // 4) + 1), "logo": None} for i in range(1, 21)}
-        st.session_state.partidos = []
+        st.session_state.partidos, st.session_state.goleadores = [], []
         st.session_state.fase_final = inicializar_fase_final()
-        st.session_state.goleadores = []
 
-# --- 5. BARRA LATERAL ---
-with st.sidebar:
-    st.title("🛡️ Panel COPA NAM")
-    if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-    if not st.session_state.logged_in:
-        if st.text_input("Clave", type="password") == "admin123":
-            if st.button("Entrar"): st.session_state.logged_in = True; st.rerun()
-    else:
-        if st.button("❌ Salir"): st.session_state.logged_in = False; st.rerun()
-        if st.button("🗑️ Reset"): 
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.session_state.clear(); st.rerun()
+# --- 5. INTERFAZ ---
+st.markdown('<h1 class="nam-title"><span class="txt-celeste">N</span><span class="txt-red">A</span><span class="txt-white">M 2026</span></h1>', unsafe_allow_html=True)
 
-# --- 6. INTERFAZ PRINCIPAL ---
-st.title("🏆 COPA NAM")
-
-if not st.session_state.logged_in:
-    t_pos, t_fnal, t_res, t_gol = st.tabs(["📊 POSICIONES", "🏆 FASE FINAL", "⚽ RESULTADOS", "👟 GOLEADORES"])
+if not st.session_state.get('logged_in', False):
+    t_pos, t_ff, t_res, t_gol = st.tabs(["📊 POSICIONES", "🏆 FASE FINAL", "⚽ RESULTADOS", "👟 GOLEADORES"])
     
     with t_pos:
         stats_data = calcular_tablas()
         grupos = sorted(list(set(i['grupo'] for i in st.session_state.equipos.values())))
-        cols_g = st.columns(2)
+        cols = st.columns(2)
         for idx, g in enumerate(grupos):
-            with cols_g[idx % 2]:
-                eq_g = sorted([s for k, s in stats_data.items() if s['grupo'] == g], key=lambda x: (x['PTS'], x['DG'], x['GF']), reverse=True)
-                html_g = f'<div class="main-card"><div class="group-header"><span>GRUPO {g}</span><div class="header-labels"><span class="stat-val">PJ</span><span class="stat-val">G</span><span class="stat-val">E</span><span class="stat-val">P</span><span class="stat-val">DG</span><span class="stat-val">PTS</span></div></div>'
+            with cols[idx % 2]:
+                eq_g = sorted([s for s in stats_data.values() if s['grupo'] == g], key=lambda x: (x['PTS'], x['DG']), reverse=True)
+                html = f'<div class="main-card"><div class="group-header"><span>GRUPO {g}</span><div class="header-labels"><span class="stat-val">PJ</span><span class="stat-val">DG</span><span class="stat-val">PTS</span></div></div>'
                 for eq in eq_g:
                     img = f"data:image/png;base64,{img_to_base64(eq['logo'])}" if eq['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                    html_g += f'<div class="team-row"><img src="{img}" class="team-logo"><span class="team-name">{eq["nombre"]}</span><span class="stat-val">{eq["PJ"]}</span><span class="stat-val">{eq["G"]}</span><span class="stat-val">{eq["E"]}</span><span class="stat-val">{eq["P"]}</span><span class="stat-val">{eq["DG"]}</span><span class="stat-val">{eq["PTS"]}</span></div>'
-                st.markdown(html_g + '</div>', unsafe_allow_html=True)
+                    html += f'<div class="team-row"><img src="{img}" class="team-logo"><span class="team-name">{eq["nombre"]}</span><span class="stat-val">{eq["PJ"]}</span><span class="stat-val">{eq["DG"]}</span><span class="stat-val">{eq["PTS"]}</span></div>'
+                st.markdown(html + '</div>', unsafe_allow_html=True)
 
-    with t_fnal:
+    with t_ff:
         ff = st.session_state.fase_final
-        st.markdown('<h2 style="text-align:center; color:#00d4ff !important;">CUADRO DE ELIMINATORIAS (PARTIDO ÚNICO)</h2>', unsafe_allow_html=True)
-        html_bracket = f'''
+        # Logo de la final proporcionado por el usuario
+        final_logo_url = "https://i.ibb.co/vYm6D4m/logo-final-nam.png" # Representación del logo subido
+        html_ff = f'''
         <div class="bracket-wrapper">
             <div class="bracket-column">
-                <h4 style="text-align:center">OCTAVOS</h4>
+                <h4 style="text-align:center; color:#7db1ff">OCTAVOS</h4>
                 {render_match(ff["octavos"][0])} {render_match(ff["octavos"][1])}
                 {render_match(ff["octavos"][2])} {render_match(ff["octavos"][3])}
             </div>
             <div class="bracket-column">
-                <h4 style="text-align:center">CUARTOS</h4>
+                <h4 style="text-align:center; color:#ff3b3b">CUARTOS</h4>
                 {render_match(ff["cuartos"][0])} {render_match(ff["cuartos"][1])}
             </div>
             <div class="bracket-column">
@@ -187,8 +178,8 @@ if not st.session_state.logged_in:
                 {render_match(ff["semis"][0])}
             </div>
             <div class="final-center">
-                <img src="https://logodownload.org/wp-content/uploads/2016/03/champions-league-logo-0.png" style="width:100px; filter:drop-shadow(0 0 10px #00d4ff);">
-                <h2 style="color:#00d4ff !important; margin:10px 0;">FINAL</h2>
+                <img src="https://i.postimg.cc/0jX9YvS5/imagen-2024-05-22-184547953.png" class="final-logo-img">
+                <h1 style="color:white !important; margin:0">FINAL</h1>
                 {render_match(ff["final"])}
             </div>
             <div class="bracket-column">
@@ -196,111 +187,88 @@ if not st.session_state.logged_in:
                 {render_match(ff["semis"][1])}
             </div>
             <div class="bracket-column">
-                <h4 style="text-align:center">CUARTOS</h4>
+                <h4 style="text-align:center; color:#ff3b3b">CUARTOS</h4>
                 {render_match(ff["cuartos"][2])} {render_match(ff["cuartos"][3])}
             </div>
             <div class="bracket-column">
-                <h4 style="text-align:center">OCTAVOS</h4>
+                <h4 style="text-align:center; color:#7db1ff">OCTAVOS</h4>
                 {render_match(ff["octavos"][4])} {render_match(ff["octavos"][5])}
                 {render_match(ff["octavos"][6])} {render_match(ff["octavos"][7])}
             </div>
         </div>
         '''
-        st.markdown(html_bracket, unsafe_allow_html=True)
+        st.markdown(html_ff, unsafe_allow_html=True)
 
     with t_res:
         if st.session_state.partidos:
-            st.markdown('<h1 class="results-title">RESULTADOS RECIENTES</h1>', unsafe_allow_html=True)
             html_res = '<div class="main-card">'
             l_map = {i['nombre']: i['logo'] for i in st.session_state.equipos.values()}
             for p in reversed(st.session_state.partidos):
                 s_l = f"data:image/png;base64,{img_to_base64(l_map.get(p['local']))}" if l_map.get(p['local']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
                 s_v = f"data:image/png;base64,{img_to_base64(l_map.get(p['visitante']))}" if l_map.get(p['visitante']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                html_res += f'<div class="match-row"><div class="match-team home"><span>{p["local"]}</span><img src="{s_l}" class="match-logo"></div><div class="match-score">{p["goles_l"]}-{p["goles_v"]}</div><div class="match-team away"><img src="{s_v}" class="match-logo"><span>{p["visitante"]}</span></div></div>'
+                html_res += f'<div class="match-row" style="display:flex; align-items:center; justify-content:center; padding:20px; border-bottom:1px solid #ffffff11;"><div class="match-team home" style="flex:1; display:flex; align-items:center; justify-content:flex-end;"><span>{p["local"]}</span><img src="{s_l}" style="width:30px; margin-left:15px;"></div><div class="match-score" style="width:120px; text-align:center;">{p["goles_l"]}-{p["goles_v"]}</div><div class="match-team away" style="flex:1; display:flex; align-items:center; justify-content:flex-start;"><img src="{s_v}" style="width:30px; margin-right:15px;"><span>{p["visitante"]}</span></div></div>'
             st.markdown(html_res + '</div>', unsafe_allow_html=True)
 
     with t_gol:
-        st.markdown('<h1 class="results-title">TABLA DE GOLEADORES</h1>', unsafe_allow_html=True)
-        if not st.session_state.goleadores:
-            st.info("No hay goleadores registrados.")
-        else:
-            html_gol = '<div class="main-card"><div class="group-header"><span>JUGADOR</span><div class="header-labels"><span class="stat-val" style="width:150px">EQUIPO</span><span class="stat-val">GOLES</span></div></div>'
+        if st.session_state.goleadores:
+            html_gol = '<div class="main-card"><div class="group-header"><span>JUGADOR</span><div class="header-labels"><span style="width:120px; text-align:center">EQUIPO</span><span class="stat-val">GOLES</span></div></div>'
             for g in st.session_state.goleadores:
-                html_gol += f'<div class="team-row"><span class="team-name">{g["nombre"]}</span><span style="width:150px; text-align:center">{g["equipo"]}</span><span class="stat-val">{g["goles"]}</span></div>'
+                html_gol += f'<div class="team-row"><span class="team-name">{g["nombre"]}</span><span style="width:120px; text-align:center; font-size:0.8em">{g["equipo"]}</span><span class="stat-val">{g["goles"]}</span></div>'
             st.markdown(html_gol + '</div>', unsafe_allow_html=True)
 
-else:
-    adm_t1, adm_t2, adm_t3, adm_t4 = st.tabs(["⚙️ EQUIPOS", "⚽ GRUPOS", "🏆 FASE FINAL", "👟 GOLEADORES"])
-    
-    with adm_t1:
-        for id_e, inf in st.session_state.equipos.items():
-            with st.expander(f"Editar {inf['nombre']}"):
-                c1, c2 = st.columns(2)
-                nn = c1.text_input("Nombre", inf['nombre'], key=f"nn{id_e}")
-                nl = c2.file_uploader("Logo", type=["png", "jpg"], key=f"nl{id_e}")
-                if st.button("Guardar", key=f"bt{id_e}"):
-                    st.session_state.equipos[id_e].update({"nombre": nn.upper()})
-                    if nl: st.session_state.equipos[id_e]['logo'] = Image.open(nl)
-                    save_to_disk(); st.rerun()
-
-    with adm_t2:
-        eqs_all = [i['nombre'] for i in st.session_state.equipos.values()]
-        c1, c2 = st.columns(2)
-        lo, vi = c1.selectbox("Local", eqs_all), c2.selectbox("Visitante", eqs_all)
-        gl, gv = c1.number_input("Goles L", 0, key="gl_adm"), c2.number_input("Goles V", 0, key="gv_adm")
-        if st.button("Registrar Grupo"):
-            st.session_state.partidos.append({"local": lo, "visitante": vi, "goles_l": gl, "goles_v": gv})
-            save_to_disk(); st.rerun()
-
-    with adm_t3:
-        st.subheader("Cargar Fase Final (Partido Único)")
-        eqs_ko = [""] + [i['nombre'] for i in st.session_state.equipos.values()]
-        for fase in ["octavos", "cuartos", "semis", "final"]:
-            with st.expander(f"GESTIONAR {fase.upper()}"):
+with st.sidebar:
+    st.image("https://i.postimg.cc/02W73C3m/NAM-2026.png") # Tu logo principal
+    if not st.session_state.get('logged_in', False):
+        if st.text_input("Clave", type="password") == "admin123":
+            if st.button("Entrar"): st.session_state.logged_in = True; st.rerun()
+    else:
+        if st.button("Cerrar Sesión"): st.session_state.logged_in = False; st.rerun()
+        # Panel Admin
+        adm_t1, adm_t2, adm_t3, adm_t4 = st.tabs(["EQUIPOS", "GRUPOS", "ELIMINATORIA", "GOLEADORES"])
+        with adm_t1:
+            for id_e, inf in st.session_state.equipos.items():
+                with st.expander(f"Editar {inf['nombre']}"):
+                    nn = st.text_input("Nombre", inf['nombre'], key=f"nn{id_e}")
+                    nl = st.file_uploader("Logo", key=f"nl{id_e}")
+                    if st.button("Guardar", key=f"bt{id_e}"):
+                        st.session_state.equipos[id_e]['nombre'] = nn.upper()
+                        if nl: st.session_state.equipos[id_e]['logo'] = Image.open(nl)
+                        save_to_disk(); st.rerun()
+        with adm_t2:
+            eqs = [i['nombre'] for i in st.session_state.equipos.values()]
+            l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
+            gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
+            if st.button("Guardar Resultado"):
+                st.session_state.partidos.append({"local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
+                save_to_disk(); st.rerun()
+        with adm_t3:
+            eqs_ko = [""] + [i['nombre'] for i in st.session_state.equipos.values()]
+            for fase in ["octavos", "cuartos", "semis", "final"]:
                 if fase == "final":
-                    c1, c2, c3, c4 = st.columns(4)
-                    st.session_state.fase_final[fase]["L"] = c1.selectbox("Finalista 1", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[fase]["L"]) if st.session_state.fase_final[fase]["L"] in eqs_ko else 0, key="fin1")
-                    st.session_state.fase_final[fase]["V"] = c2.selectbox("Finalista 2", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[fase]["V"]) if st.session_state.fase_final[fase]["V"] in eqs_ko else 0, key="fin2")
-                    st.session_state.fase_final[fase]["gl"] = c3.number_input("Goles F1", value=st.session_state.fase_final[fase]["gl"], key="fgl")
-                    st.session_state.fase_final[fase]["gv"] = c4.number_input("Goles F2", value=st.session_state.fase_final[fase]["gv"], key="fgv")
+                    st.session_state.fase_final[fase]["L"] = st.selectbox("F1", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[fase]["L"]) if st.session_state.fase_final[fase]["L"] in eqs_ko else 0)
+                    st.session_state.fase_final[fase]["V"] = st.selectbox("F2", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[fase]["V"]) if st.session_state.fase_final[fase]["V"] in eqs_ko else 0)
+                    st.session_state.fase_final[fase]["gl"] = st.number_input("G1", value=st.session_state.fase_final[fase]["gl"])
+                    st.session_state.fase_final[fase]["gv"] = st.number_input("G2", value=st.session_state.fase_final[fase]["gv"])
                 else:
                     for i in range(len(st.session_state.fase_final[fase])):
-                        st.write(f"Partido {i+1}")
-                        c1, c2, c3, c4 = st.columns(4)
-                        st.session_state.fase_final[fase][i]["L"] = c1.selectbox(f"Local {fase}{i}", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[fase][i]["L"]) if st.session_state.fase_final[fase][i]["L"] in eqs_ko else 0, key=f"l{fase}{i}")
-                        st.session_state.fase_final[fase][i]["V"] = c2.selectbox(f"Vis. {fase}{i}", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[fase][i]["V"]) if st.session_state.fase_final[fase][i]["V"] in eqs_ko else 0, key=f"v{fase}{i}")
-                        st.session_state.fase_final[fase][i]["gl"] = c3.number_input(f"GL {fase}{i}", value=st.session_state.fase_final[fase][i]["gl"], key=f"gl{fase}{i}")
-                        st.session_state.fase_final[fase][i]["gv"] = c4.number_input(f"GV {fase}{i}", value=st.session_state.fase_final[fase][i]["gv"], key=f"gv{fase}{i}")
-        if st.button("💾 GUARDAR FASE FINAL"):
-            save_to_disk(); st.success("Guardado!"); st.rerun()
-
-    with adm_t4:
-        st.subheader("Gestión de Goleadores")
-        with st.form("nuevo_goleador"):
-            c1, c2, c3 = st.columns([2, 1, 2])
-            n_gol = c1.text_input("Nombre del Jugador")
-            g_gol = c2.number_input("Goles", min_value=0, step=1)
-            e_gol = c3.selectbox("Equipo", [i['nombre'] for i in st.session_state.equipos.values()])
-            if st.form_submit_button("Añadir Goleador"):
-                st.session_state.goleadores.append({"nombre": n_gol.upper(), "goles": g_gol, "equipo": e_gol})
+                        st.session_state.fase_final[fase][i]["L"] = st.selectbox(f"{fase} L{i}", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[fase][i]["L"]) if st.session_state.fase_final[fase][i]["L"] in eqs_ko else 0)
+                        st.session_state.fase_final[fase][i]["V"] = st.selectbox(f"{fase} V{i}", eqs_ko, index=eqs_ko.index(st.session_state.fase_final[fase][i]["V"]) if st.session_state.fase_final[fase][i]["V"] in eqs_ko else 0)
+                        st.session_state.fase_final[fase][i]["gl"] = st.number_input(f"GL {fase}{i}", value=st.session_state.fase_final[fase][i]["gl"])
+                        st.session_state.fase_final[fase][i]["gv"] = st.number_input(f"GV {fase}{i}", value=st.session_state.fase_final[fase][i]["gv"])
+            if st.button("Guardar Eliminatoria"): save_to_disk(); st.rerun()
+        with adm_t4:
+            n = st.text_input("Jugador")
+            e = st.selectbox("Equipo Jugador", [i['nombre'] for i in st.session_state.equipos.values()])
+            g = st.number_input("Goles Jugador", 0)
+            if st.button("Añadir Goleador"):
+                st.session_state.goleadores.append({"nombre": n.upper(), "equipo": e, "goles": g})
                 save_to_disk(); st.rerun()
-
-        st.divider()
-        st.write("Control Manual de Posiciones")
-        for i, goleador in enumerate(st.session_state.goleadores):
-            col_txt, col_up, col_down, col_del = st.columns([4, 1, 1, 1])
-            col_txt.write(f"**{i+1}. {goleador['nombre']}** ({goleador['equipo']}) - {goleador['goles']} goles")
-            
-            if col_up.button("🔼", key=f"up{i}"):
-                if i > 0:
+            for i, gol in enumerate(st.session_state.goleadores):
+                c1, c2, c3 = st.columns([3,1,1])
+                c1.write(f"{gol['nombre']}")
+                if c2.button("🔼", key=f"u{i}") and i > 0:
                     st.session_state.goleadores[i], st.session_state.goleadores[i-1] = st.session_state.goleadores[i-1], st.session_state.goleadores[i]
                     save_to_disk(); st.rerun()
-            
-            if col_down.button("🔽", key=f"down{i}"):
-                if i < len(st.session_state.goleadores) - 1:
+                if c3.button("🔽", key=f"d{i}") and i < len(st.session_state.goleadores)-1:
                     st.session_state.goleadores[i], st.session_state.goleadores[i+1] = st.session_state.goleadores[i+1], st.session_state.goleadores[i]
                     save_to_disk(); st.rerun()
-            
-            if col_del.button("🗑️", key=f"del{i}"):
-                st.session_state.goleadores.pop(i)
-                save_to_disk(); st.rerun()
