@@ -7,7 +7,7 @@ import json
 import os
 
 # --- 1. CONFIGURACIÓN Y PERSISTENCIA ---
-st.set_page_config(page_title="NAM 2026", layout="wide")
+st.set_page_config(page_title="#NAMLEAGUE2026", layout="wide")
 
 DB_FILE = "torneo_data.json"
 
@@ -72,7 +72,7 @@ st.markdown("""
     
     [data-testid="stAppViewContainer"] { background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important; }
     
-    .txt-gold { color: #FFD700 !important; }
+    .txt-gold { color: #7db1ff !important; }
     .txt-red { color: #ff3b3b !important; }
     .txt-white { color: #ffffff !important; }
 
