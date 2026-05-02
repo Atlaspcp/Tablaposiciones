@@ -167,7 +167,7 @@ if 'equipos' not in st.session_state:
         st.session_state.fase_final = inicializar_fase_final()
 
 # --- 5. INTERFAZ ---
-st.markdown('<h1 class="nam-title">#<span class="txt-celeste">N</span><span class="txt-red">A</span>MLEAGUE2026</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="nam-title">#<span class="txt-celeste">N</span><span class="txt-red">A</span>M LEAGUE2026</h1>', unsafe_allow_html=True)
 
 if not st.session_state.get('logged_in', False):
     t_pos, t_ff, t_res, t_gol = st.tabs(["📊 POSICIONES", "🏆 FASE FINAL", "⚽ RESULTADOS", "👟 GOLEADORES"])
