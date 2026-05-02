@@ -65,47 +65,55 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS (DORADO + ALINEACIÓN PERFECTA) ---
+# --- 2. ESTILOS CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
     
     [data-testid="stAppViewContainer"] { background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important; }
     
-    .txt-gold { color: #7db1ff !important; }
+    .txt-celeste { color: #7db1ff !important; }
     .txt-red { color: #ff3b3b !important; }
     .txt-white { color: #ffffff !important; }
 
     h1, h2, h3, .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 900; }
-    .nam-title { font-size: 4.5em; text-align: center; font-weight: 900; margin-bottom: 0px; letter-spacing: -2px; line-height: 1; }
+    
+    .nam-title { font-size: 4.5em; text-align: center; font-weight: 900; margin-bottom: 0px; letter-spacing: -2px; line-height: 1; color: white; }
 
     .main-card {
         background: rgba(0, 10, 60, 0.6); border-radius: 12px; margin-bottom: 25px;
         border: 1px solid #FFD70033; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
     }
     
-    /* ALINEACIÓN DE TABLAS */
     .group-header {
         background: linear-gradient(90deg, #00124d 0%, #ff3b3b33 100%);
         padding: 12px 15px; border-bottom: 3px solid #FFD700; font-weight: 900;
         display: flex; align-items: center; border-radius: 12px 12px 0 0;
     }
-    .group-title { flex-grow: 1; font-size: 1.1em; }
+    .group-title { flex-grow: 1; font-size: 1.1em; color: white; }
     
     .team-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ffffff10; font-size: 0.9em; }
     .team-logo { width: 26px; height: 26px; margin-right: 12px; object-fit: contain; }
     .team-name { flex-grow: 1; text-transform: uppercase; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
-    /* Columnas de estadísticas con ancho fijo para evitar descuadre */
-    .stat-col { width: 35px; text-align: center; font-weight: bold; flex-shrink: 0; }
-    .header-labels { display: flex; color: #FFD700; font-size: 0.85em; }
+    /* Columnas de estadísticas con ancho fijo */
+    .stat-col { width: 40px; text-align: center; font-weight: bold; flex-shrink: 0; color: white !important; }
+    .header-labels { display: flex; color: white !important; font-size: 0.85em; }
 
     /* Fase Final */
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 500px; width: 25%; }
+    .bracket-column h4 { color: white !important; text-align: center; margin-bottom: 5px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 6px; border: 1px solid #FFD70044; padding: 8px; margin: 15px 0; }
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 26px; text-align: center; border-radius: 2px; }
     .final-center { width: 35%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+    /* Goleadores */
+    .gol-header { display: flex; align-items: center; padding: 12px 15px; background: rgba(0,0,0,0.2); border-bottom: 2px solid #FFD700; font-weight: 900; color: white !important; }
+    .gol-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ffffff10; }
+    .gol-name { flex-grow: 1; font-weight: 700; text-transform: uppercase; }
+    .gol-team { width: 200px; text-align: center; color: #FFD700; font-size: 0.85em; }
+    .gol-stat { width: 60px; text-align: center; font-weight: 900; font-size: 1.1em; color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -123,7 +131,6 @@ def render_match(match):
     return f'<div class="match-box-ko"><div class="team-row" style="border:none; padding:4px;"><img src="{img1}" class="team-logo"><span class="team-name" style="font-size:0.75em">{n1}</span><span class="ko-score">{match["gl"]}</span></div><div class="team-row" style="border:none; padding:4px;"><img src="{img2}" class="team-logo"><span class="team-name" style="font-size:0.75em">{n2}</span><span class="ko-score">{match["gv"]}</span></div></div>'
 
 def calcular_tablas():
-    # Incluimos G, E, P, GF, GC
     stats = {info['nombre']: {"nombre": info['nombre'], "PJ": 0, "G": 0, "E": 0, "P": 0, "GF": 0, "GC": 0, "DG": 0, "PTS": 0, "grupo": info['grupo'], "logo": info['logo']} for info in st.session_state.equipos.values()}
     for p in st.session_state.partidos:
         l, v, gl, gv = p['local'], p['visitante'], p['goles_l'], p['goles_v']
@@ -154,9 +161,11 @@ if 'equipos' not in st.session_state:
         st.session_state.fase_final = inicializar_fase_final()
 
 # --- 5. INTERFAZ ---
-c_logo1, c_title, c_logo2 = st.columns([1, 4, 1])
-with c_title:
-    st.markdown('<h1 class="nam-title"><span class="txt-gold">N</span><span class="txt-red">A</span><span class="txt-white">M 2026</span></h1>', unsafe_allow_html=True)
+# TÍTULO CON FORMATO #NAMLEAGUE2026
+st.markdown('<h1 class="nam-title">#<span class="txt-celeste">N</span><span class="txt-red">A</span>MLEAGUE2026</h1>', unsafe_allow_html=True)
+
+# Logos del torneo si existen
+c_logo1, _, c_logo2 = st.columns([1, 4, 1])
 if st.session_state.logo_torneo:
     with c_logo1: st.image(st.session_state.logo_torneo, width=120)
     with c_logo2: st.image(st.session_state.logo_torneo, width=120)
@@ -199,7 +208,7 @@ if not st.session_state.get('logged_in', False):
                         <span class="stat-col">{eq["GF"]}</span>
                         <span class="stat-col">{eq["GC"]}</span>
                         <span class="stat-col">{eq["DG"]}</span>
-                        <span class="stat-col" style="color:#FFD700">{eq["PTS"]}</span>
+                        <span class="stat-col" style="color:white !important">{eq["PTS"]}</span>
                     </div>'''
                 st.markdown(html + '</div>', unsafe_allow_html=True)
 
@@ -208,11 +217,11 @@ if not st.session_state.get('logged_in', False):
         html_ff = f'''
         <div class="bracket-wrapper">
             <div class="bracket-column">
-                <h4 style="text-align:center; color:#FFD700">CUARTOS</h4>
+                <h4>CUARTOS</h4>
                 {render_match(ff["cuartos"][0])} {render_match(ff["cuartos"][1])}
             </div>
             <div class="bracket-column">
-                <h4 style="text-align:center; color:#ff3b3b">SEMIFINAL</h4>
+                <h4>SEMIFINAL</h4>
                 {render_match(ff["semis"][0])}
             </div>
             <div class="final-center">
@@ -221,11 +230,11 @@ if not st.session_state.get('logged_in', False):
                 {render_match(ff["final"])}
             </div>
             <div class="bracket-column">
-                <h4 style="text-align:center; color:#ff3b3b">SEMIFINAL</h4>
+                <h4>SEMIFINAL</h4>
                 {render_match(ff["semis"][1])}
             </div>
             <div class="bracket-column">
-                <h4 style="text-align:center; color:#FFD700">CUARTOS</h4>
+                <h4>CUARTOS</h4>
                 {render_match(ff["cuartos"][2])} {render_match(ff["cuartos"][3])}
             </div>
         </div>'''
@@ -243,9 +252,20 @@ if not st.session_state.get('logged_in', False):
 
     with t_gol:
         if st.session_state.goleadores:
-            html_gol = '<div class="main-card"><div class="group-header"><span class="group-title">JUGADOR</span><div class="header-labels"><span style="width:120px; text-align:center">EQUIPO</span><span class="stat-col">GOLES</span></div></div>'
+            html_gol = f'''
+            <div class="main-card">
+                <div class="gol-header">
+                    <span style="flex-grow:1">JUGADOR</span>
+                    <span style="width:200px; text-align:center">EQUIPO</span>
+                    <span style="width:60px; text-align:center">GOLES</span>
+                </div>'''
             for g in st.session_state.goleadores:
-                html_gol += f'<div class="team-row"><span class="team-name">{g["nombre"]}</span><span style="width:120px; text-align:center; font-size:0.8em; color:#FFD700">{g["equipo"]}</span><span class="stat-col">{g["goles"]}</span></div>'
+                html_gol += f'''
+                <div class="gol-row">
+                    <span class="gol-name">{g["nombre"]}</span>
+                    <span class="gol-team">{g["equipo"]}</span>
+                    <span class="gol-stat">{g["goles"]}</span>
+                </div>'''
             st.markdown(html_gol + '</div>', unsafe_allow_html=True)
 
 # --- 6. PANEL ADMINISTRADOR ---
@@ -303,3 +323,12 @@ with st.sidebar:
             if st.button("Añadir Goleador"):
                 st.session_state.goleadores.append({"nombre": n.upper(), "equipo": e, "goles": g})
                 save_to_disk(); st.rerun()
+            for i, gol in enumerate(st.session_state.goleadores):
+                c1, c2, c3 = st.columns([3,1,1])
+                c1.write(f"{gol['nombre']}")
+                if c2.button("🔼", key=f"u{i}") and i > 0:
+                    st.session_state.goleadores[i], st.session_state.goleadores[i-1] = st.session_state.goleadores[i-1], st.session_state.goleadores[i]
+                    save_to_disk(); st.rerun()
+                if c3.button("🔽", key=f"d{i}") and i < len(st.session_state.goleadores)-1:
+                    st.session_state.goleadores[i], st.session_state.goleadores[i+1] = st.session_state.goleadores[i+1], st.session_state.goleadores[i]
+                    save_to_disk(); st.rerun()
