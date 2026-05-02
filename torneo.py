@@ -80,6 +80,11 @@ st.markdown("""
     
     .nam-title { font-size: 4.5em; text-align: center; font-weight: 900; margin-bottom: 0px; letter-spacing: -2px; line-height: 1; color: white; }
 
+    /* Forzar texto negro en los encabezados de la barra lateral */
+    [data-testid="stSidebar"] h2 {
+        color: #000000 !important;
+    }
+
     .main-card {
         background: rgba(0, 10, 60, 0.6); border-radius: 12px; margin-bottom: 25px;
         border: 1px solid #FFD70033; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
@@ -96,11 +101,9 @@ st.markdown("""
     .team-logo { width: 26px; height: 26px; margin-right: 12px; object-fit: contain; }
     .team-name { flex-grow: 1; text-transform: uppercase; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
-    /* Columnas de estadísticas con ancho fijo */
     .stat-col { width: 40px; text-align: center; font-weight: bold; flex-shrink: 0; color: white !important; }
     .header-labels { display: flex; color: white !important; font-size: 0.85em; }
 
-    /* Fase Final */
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 500px; width: 25%; }
     .bracket-column h4 { color: white !important; text-align: center; margin-bottom: 5px; }
@@ -108,7 +111,6 @@ st.markdown("""
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 26px; text-align: center; border-radius: 2px; }
     .final-center { width: 35%; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
-    /* Goleadores */
     .gol-header { display: flex; align-items: center; padding: 12px 15px; background: rgba(0,0,0,0.2); border-bottom: 2px solid #FFD700; font-weight: 900; color: white !important; }
     .gol-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ffffff10; }
     .gol-name { flex-grow: 1; font-weight: 700; text-transform: uppercase; }
@@ -161,10 +163,9 @@ if 'equipos' not in st.session_state:
         st.session_state.fase_final = inicializar_fase_final()
 
 # --- 5. INTERFAZ ---
-# TÍTULO CON FORMATO #NAMLEAGUE2026
-st.markdown('<h1 class="nam-title">#<span class="txt-celeste">N</span><span class="txt-red">A</span>MLEAGUE2026</h1>', unsafe_allow_html=True)
+# AQUÍ PUEDES EDITAR EL TÍTULO DIRECTAMENTE
+st.markdown('<h1 class="nam-title">#<span class="txt-celeste">N</span><span class="txt-red">A</span>NAM LEAGUE2026</h1>', unsafe_allow_html=True)
 
-# Logos del torneo si existen
 c_logo1, _, c_logo2 = st.columns([1, 4, 1])
 if st.session_state.logo_torneo:
     with c_logo1: st.image(st.session_state.logo_torneo, width=120)
@@ -270,7 +271,7 @@ if not st.session_state.get('logged_in', False):
 
 # --- 6. PANEL ADMINISTRADOR ---
 with st.sidebar:
-    st.header("🔐 Configuración NAM")
+    st.header("🔐 Configuración NAM") # ESTA LÍNEA AHORA SE VERÁ NEGRA
     if not st.session_state.get('logged_in', False):
         if st.text_input("Clave", type="password") == "admin123":
             if st.button("Entrar"): st.session_state.logged_in = True; st.rerun()
