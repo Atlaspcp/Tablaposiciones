@@ -21,7 +21,8 @@ def save_to_disk():
     data_to_save = {
         "partidos": st.session_state.partidos,
         "equipos": {},
-        "fase_final": st.session_state.fase_final
+        "fase_final": st.session_state.fase_final,
+        "goleadores": st.session_state.goleadores
     }
     for id_eq, info in st.session_state.equipos.items():
         data_to_save["equipos"][id_eq] = {
@@ -47,6 +48,7 @@ def load_from_disk():
                 data = json.load(f)
                 st.session_state.partidos = data.get("partidos", [])
                 st.session_state.fase_final = data.get("fase_final", inicializar_fase_final())
+                st.session_state.goleadores = data.get("goleadores", [])
                 equipos_cargados = {}
                 for id_eq, info in data.get("equipos", {}).items():
                     logo_pil = None
@@ -132,6 +134,7 @@ if 'equipos' not in st.session_state:
         st.session_state.equipos = {f"ID_{i}": {"nombre": f"EQUIPO {i}", "grupo": chr(64 + ((i-1) // 4) + 1), "logo": None} for i in range(1, 21)}
         st.session_state.partidos = []
         st.session_state.fase_final = inicializar_fase_final()
+        st.session_state.goleadores = []
 
 # --- 5. BARRA LATERAL ---
 with st.sidebar:
@@ -150,8 +153,7 @@ with st.sidebar:
 st.title("🏆 COPA NAM")
 
 if not st.session_state.logged_in:
-    # EL ORDEN AQUÍ DEFINE QUE "POSICIONES" SEA LA PRIMERA PESTAÑA POR DEFECTO
-    t_pos, t_fnal, t_res = st.tabs(["📊 POSICIONES", "🏆 FASE FINAL", "⚽ RESULTADOS"])
+    t_pos, t_fnal, t_res, t_gol = st.tabs(["📊 POSICIONES", "🏆 FASE FINAL", "⚽ RESULTADOS", "👟 GOLEADORES"])
     
     with t_pos:
         stats_data = calcular_tablas()
@@ -168,7 +170,7 @@ if not st.session_state.logged_in:
 
     with t_fnal:
         ff = st.session_state.fase_final
-        st.markdown('<h2 style="text-align:center; color:#00d4ff !important;">CUADRO DE ELIMINATORIAS</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="text-align:center; color:#00d4ff !important;">CUADRO DE ELIMINATORIAS (PARTIDO ÚNICO)</h2>', unsafe_allow_html=True)
         html_bracket = f'''
         <div class="bracket-wrapper">
             <div class="bracket-column">
@@ -217,8 +219,19 @@ if not st.session_state.logged_in:
                 html_res += f'<div class="match-row"><div class="match-team home"><span>{p["local"]}</span><img src="{s_l}" class="match-logo"></div><div class="match-score">{p["goles_l"]}-{p["goles_v"]}</div><div class="match-team away"><img src="{s_v}" class="match-logo"><span>{p["visitante"]}</span></div></div>'
             st.markdown(html_res + '</div>', unsafe_allow_html=True)
 
+    with t_gol:
+        st.markdown('<h1 class="results-title">TABLA DE GOLEADORES</h1>', unsafe_allow_html=True)
+        if not st.session_state.goleadores:
+            st.info("No hay goleadores registrados.")
+        else:
+            html_gol = '<div class="main-card"><div class="group-header"><span>JUGADOR</span><div class="header-labels"><span class="stat-val" style="width:150px">EQUIPO</span><span class="stat-val">GOLES</span></div></div>'
+            for g in st.session_state.goleadores:
+                html_gol += f'<div class="team-row"><span class="team-name">{g["nombre"]}</span><span style="width:150px; text-align:center">{g["equipo"]}</span><span class="stat-val">{g["goles"]}</span></div>'
+            st.markdown(html_gol + '</div>', unsafe_allow_html=True)
+
 else:
-    adm_t1, adm_t2, adm_t3 = st.tabs(["⚙️ EQUIPOS", "⚽ GRUPOS", "🏆 FASE FINAL"])
+    adm_t1, adm_t2, adm_t3, adm_t4 = st.tabs(["⚙️ EQUIPOS", "⚽ GRUPOS", "🏆 FASE FINAL", "👟 GOLEADORES"])
+    
     with adm_t1:
         for id_e, inf in st.session_state.equipos.items():
             with st.expander(f"Editar {inf['nombre']}"):
@@ -229,6 +242,7 @@ else:
                     st.session_state.equipos[id_e].update({"nombre": nn.upper()})
                     if nl: st.session_state.equipos[id_e]['logo'] = Image.open(nl)
                     save_to_disk(); st.rerun()
+
     with adm_t2:
         eqs_all = [i['nombre'] for i in st.session_state.equipos.values()]
         c1, c2 = st.columns(2)
@@ -237,8 +251,9 @@ else:
         if st.button("Registrar Grupo"):
             st.session_state.partidos.append({"local": lo, "visitante": vi, "goles_l": gl, "goles_v": gv})
             save_to_disk(); st.rerun()
+
     with adm_t3:
-        st.subheader("Cargar Fase Final")
+        st.subheader("Cargar Fase Final (Partido Único)")
         eqs_ko = [""] + [i['nombre'] for i in st.session_state.equipos.values()]
         for fase in ["octavos", "cuartos", "semis", "final"]:
             with st.expander(f"GESTIONAR {fase.upper()}"):
@@ -258,3 +273,34 @@ else:
                         st.session_state.fase_final[fase][i]["gv"] = c4.number_input(f"GV {fase}{i}", value=st.session_state.fase_final[fase][i]["gv"], key=f"gv{fase}{i}")
         if st.button("💾 GUARDAR FASE FINAL"):
             save_to_disk(); st.success("Guardado!"); st.rerun()
+
+    with adm_t4:
+        st.subheader("Gestión de Goleadores")
+        with st.form("nuevo_goleador"):
+            c1, c2, c3 = st.columns([2, 1, 2])
+            n_gol = c1.text_input("Nombre del Jugador")
+            g_gol = c2.number_input("Goles", min_value=0, step=1)
+            e_gol = c3.selectbox("Equipo", [i['nombre'] for i in st.session_state.equipos.values()])
+            if st.form_submit_button("Añadir Goleador"):
+                st.session_state.goleadores.append({"nombre": n_gol.upper(), "goles": g_gol, "equipo": e_gol})
+                save_to_disk(); st.rerun()
+
+        st.divider()
+        st.write("Control Manual de Posiciones")
+        for i, goleador in enumerate(st.session_state.goleadores):
+            col_txt, col_up, col_down, col_del = st.columns([4, 1, 1, 1])
+            col_txt.write(f"**{i+1}. {goleador['nombre']}** ({goleador['equipo']}) - {goleador['goles']} goles")
+            
+            if col_up.button("🔼", key=f"up{i}"):
+                if i > 0:
+                    st.session_state.goleadores[i], st.session_state.goleadores[i-1] = st.session_state.goleadores[i-1], st.session_state.goleadores[i]
+                    save_to_disk(); st.rerun()
+            
+            if col_down.button("🔽", key=f"down{i}"):
+                if i < len(st.session_state.goleadores) - 1:
+                    st.session_state.goleadores[i], st.session_state.goleadores[i+1] = st.session_state.goleadores[i+1], st.session_state.goleadores[i]
+                    save_to_disk(); st.rerun()
+            
+            if col_del.button("🗑️", key=f"del{i}"):
+                st.session_state.goleadores.pop(i)
+                save_to_disk(); st.rerun()
