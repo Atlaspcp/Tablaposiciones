@@ -240,32 +240,41 @@ with st.sidebar:
                         save_to_disk(); st.rerun()
 
         with adm_t[2]:
-            st.subheader("Añadir Partido")
-            eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
-            fecha_p = st.date_input("Fecha", datetime.now())
-            l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
-            gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
-            if st.button("Registrar Partido"):
-                st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
-                save_to_disk(); st.rerun()
-            
-            st.divider()
-            st.subheader("Editar Partidos Existentes")
-            # Listado de partidos para editar/eliminar
-            for i, p in enumerate(st.session_state.partidos):
-                with st.expander(f"{p['fecha']} | {p['local']} vs {p['visitante']}"):
-                    c1, c2 = st.columns(2)
-                    new_gl = c1.number_input(f"Goles {p['local']}", value=p['goles_l'], key=f"egl{i}")
-                    new_gv = c2.number_input(f"Goles {p['visitante']}", value=p['goles_v'], key=f"egv{i}")
+                    st.subheader("Añadir Partido")
+                    eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
+                    fecha_p = st.date_input("Fecha", datetime.now())
+                    l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
+                    gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
+                    if st.button("Registrar Partido"):
+                        st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
+                        save_to_disk(); st.rerun()
                     
-                    b_col1, b_col2 = st.columns(2)
-                    if b_col1.button("💾 Actualizar", key=f"upd{i}"):
-                        st.session_state.partidos[i]['goles_l'] = new_gl
-                        st.session_state.partidos[i]['goles_v'] = new_gv
-                        save_to_disk(); st.rerun()
-                    if b_col2.button("🗑️ Eliminar", key=f"delp{i}"):
-                        st.session_state.partidos.pop(i)
-                        save_to_disk(); st.rerun()
+                    st.divider()
+                    st.subheader("Editar Partidos Existentes")
+                    
+                    # --- CORRECCIÓN DEL ERROR AQUÍ ---
+                    for i, p in enumerate(st.session_state.partidos):
+                        # Usamos .get('fecha', 'S/D') para que si no existe la llave, no explote el código
+                        fecha_display = p.get('fecha', 'Sin Fecha')
+                        local_display = p.get('local', 'Equipo L')
+                        visitante_display = p.get('visitante', 'Equipo V')
+                        
+                        with st.expander(f"{fecha_display} | {local_display} vs {visitante_display}"):
+                            c1, c2 = st.columns(2)
+                            new_gl = c1.number_input(f"Goles {local_display}", value=p['goles_l'], key=f"egl{i}")
+                            new_gv = c2.number_input(f"Goles {visitante_display}", value=p['goles_v'], key=f"egv{i}")
+                            
+                            b_col1, b_col2 = st.columns(2)
+                            if b_col1.button("💾 Actualizar", key=f"upd{i}"):
+                                st.session_state.partidos[i]['goles_l'] = new_gl
+                                st.session_state.partidos[i]['goles_v'] = new_gv
+                                # Aprovechamos de asignarle la fecha actual si no tenía una
+                                if 'fecha' not in st.session_state.partidos[i]:
+                                    st.session_state.partidos[i]['fecha'] = str(datetime.now().date())
+                                save_to_disk(); st.rerun()
+                            if b_col2.button("🗑️ Eliminar", key=f"delp{i}"):
+                                st.session_state.partidos.pop(i)
+                                save_to_disk(); st.rerun()
 
         with adm_t[3]:
             eqs_ko = [""] + eqs
