@@ -78,19 +78,34 @@ st.markdown("""
     .main-card {
         background: rgba(0, 10, 60, 0.6); border-radius: 12px; margin-bottom: 25px;
         border: 1px solid #FFD70033; color: white; backdrop-filter: blur(10px);
+        overflow: hidden;
     }
 
+    /* GRID DE POSICIONES */
     .grid-posiciones { display: grid; grid-template-columns: 2fr repeat(8, 45px); align-items: center; min-width: 650px; padding: 10px 15px; }
+    
+    /* GRID DE GOLEADORES CORREGIDA */
+    .grid-goleadores { 
+        display: grid; 
+        grid-template-columns: 2fr 1.5fr 1fr; 
+        align-items: center; 
+        width: 100%; 
+        padding: 12px 15px; 
+        border-bottom: 1px solid #ffffff10;
+    }
+    
     .header-grid { background: linear-gradient(90deg, #00124d 0%, #ff3b3b33 100%); border-bottom: 3px solid #FFD700; font-weight: 900; }
     .stat-cell { text-align: center; font-weight: bold; }
 
-    /* Estructura Bracket corregida */
+    /* Estructura Bracket */
     .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
     .bracket-wrapper { display: flex; justify-content: space-around; align-items: center; min-width: 1100px; }
     .bracket-column { display: flex; flex-direction: column; justify-content: center; gap: 40px; width: 240px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; width: 100%; }
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 32px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 3px; }
     .final-center { width: 320px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    
+    .date-divider { background: #FFD700; color: black; padding: 5px 20px; font-weight: 900; border-radius: 4px; margin: 20px 0 10px 0; display: inline-block; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -100,38 +115,11 @@ def get_team_info(name):
         if info['nombre'] == name: return info
     return {"nombre": name or "TBD", "logo": None}
 
-def render_match(match):
-    t1, t2 = get_team_info(match["L"]), get_team_info(match["V"])
-    gl = match.get("gl") if match.get("gl") is not None else "-"
-    gv = match.get("gv") if match.get("gv") is not None else "-"
-    img1 = f"data:image/png;base64,{img_to_base64(t1['logo'])}" if t1['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-    img2 = f"data:image/png;base64,{img_to_base64(t2['logo'])}" if t2['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-    
-    return f'''
-    <div class="match-box-ko">
-        <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom:8px;">
-            <div style="display:flex; align-items:center; overflow:hidden; flex:1;">
-                <img src="{img1}" style="width:20px; height:20px; margin-right:8px; flex-shrink:0;">
-                <span style="font-size:0.75em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">{t1["nombre"]}</span>
-            </div>
-            <span class="ko-score">{gl}</span>
-        </div>
-        <div style="display:flex; align-items:center; justify-content: space-between;">
-            <div style="display:flex; align-items:center; overflow:hidden; flex:1;">
-                <img src="{img2}" style="width:20px; height:20px; margin-right:8px; flex-shrink:0;">
-                <span style="font-size:0.75em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">{t2["nombre"]}</span>
-            </div>
-            <span class="ko-score">{gv}</span>
-        </div>
-    </div>'''
-
 def calcular_tablas():
     stats = {info['nombre']: {"nombre": info['nombre'], "PJ": 0, "G": 0, "E": 0, "P": 0, "GF": 0, "GC": 0, "DG": 0, "PTS": 0, "grupo": info['grupo'], "logo": info['logo']} for info in st.session_state.equipos.values()}
     for p in st.session_state.partidos:
         l, v = p['local'], p['visitante']
         gl, gv = p.get('goles_l'), p.get('goles_v')
-        
-        # FILTRO DE SEGURIDAD: Solo calcula si el marcador NO es None
         if gl is not None and gv is not None and l in stats and v in stats:
             stats[l]["PJ"] += 1; stats[v]["PJ"] += 1
             stats[l]["GF"] += gl; stats[l]["GC"] += gv
@@ -154,78 +142,37 @@ if 'equipos' not in st.session_state:
 # --- 5. INTERFAZ PÚBLICA ---
 st.markdown('<h1 class="nam-title">#<span class="txt-celeste">N</span><span class="txt-red">A</span>MLEAGUE2026</h1>', unsafe_allow_html=True)
 
-if not st.session_state.get('logged_in', False):
-    t_pos, t_ff, t_res, t_gol = st.tabs(["📊 POSICIONES", "🏆 FASE FINAL", "⚽ RESULTADOS", "👟 GOLEADORES"])
-    
-    with t_pos:
-        stats_data = calcular_tablas()
-        for g in sorted(list(set(i['grupo'] for i in st.session_state.equipos.values()))):
-            eq_g = sorted([s for s in stats_data.values() if s['grupo'] == g], key=lambda x: (x['PTS'], x['DG'], x['GF']), reverse=True)
-            html = f'<div class="main-card"><div class="grid-posiciones header-grid"><span>GRUPO {g}</span><span class="stat-cell">PJ</span><span class="stat-cell">G</span><span class="stat-cell">E</span><span class="stat-cell">P</span><span class="stat-cell">GF</span><span class="stat-cell">GC</span><span class="stat-cell">DG</span><span class="stat-cell">PTS</span></div>'
-            for eq in eq_g:
-                img = f"data:image/png;base64,{img_to_base64(eq['logo'])}" if eq['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                html += f'<div class="grid-posiciones" style="border-bottom:1px solid #ffffff10;"><div style="display:flex;align-items:center;"><img src="{img}" style="width:24px;margin-right:12px;">{eq["nombre"]}</div><span class="stat-cell">{eq["PJ"]}</span><span class="stat-cell">{eq["G"]}</span><span class="stat-cell">{eq["E"]}</span><span class="stat-cell">{eq["P"]}</span><span class="stat-cell">{eq["GF"]}</span><span class="stat-cell">{eq["GC"]}</span><span class="stat-cell">{eq["DG"]}</span><span class="stat-cell" style="color:#FFD700">{eq["PTS"]}</span></div>'
-            st.markdown(html + '</div>', unsafe_allow_html=True)
+t_pos, t_ff, t_res, t_gol = st.tabs(["📊 POSICIONES", "🏆 FASE FINAL", "⚽ RESULTADOS", "👟 GOLEADORES"])
 
-    with t_ff:
-        ff = st.session_state.fase_final
-        logo_f = img_to_base64(st.session_state.logo_final)
-        logo_img = f'<img src="data:image/png;base64,{logo_f}" width="160" style="filter:drop-shadow(0 0 15px #FFD700)">' if logo_f else '<h2>FINAL</h2>'
-        
-        # ENSAMBLAJE LIMPIO: Sin etiquetas sobrantes
-        html_bracket = f'''
-        <div class="bracket-scroll">
-            <div class="bracket-wrapper">
-                <div class="bracket-column">
-                    <h4 style="text-align:center;color:white;">CUARTOS</h4>
-                    {render_match(ff["cuartos"][0])}
-                    {render_match(ff["cuartos"][1])}
-                </div>
-                <div class="bracket-column">
-                    <h4 style="text-align:center;color:white;">SEMIFINAL</h4>
-                    {render_match(ff["semis"][0])}
-                </div>
-                <div class="final-center">
-                    {logo_img}
-                    <h1 style="color:white !important;margin:15px 0;">GRAN FINAL</h1>
-                    {render_match(ff["final"])}
-                </div>
-                <div class="bracket-column">
-                    <h4 style="text-align:center;color:white;">SEMIFINAL</h4>
-                    {render_match(ff["semis"][1])}
-                </div>
-                <div class="bracket-column">
-                    <h4 style="text-align:center;color:white;">CUARTOS</h4>
-                    {render_match(ff["cuartos"][2])}
-                    {render_match(ff["cuartos"][3])}
-                </div>
+with t_pos:
+    stats_data = calcular_tablas()
+    for g in sorted(list(set(i['grupo'] for i in st.session_state.equipos.values()))):
+        eq_g = sorted([s for s in stats_data.values() if s['grupo'] == g], key=lambda x: (x['PTS'], x['DG'], x['GF']), reverse=True)
+        html = f'<div class="main-card"><div class="grid-posiciones header-grid"><span>GRUPO {g}</span><span class="stat-cell">PJ</span><span class="stat-cell">G</span><span class="stat-cell">E</span><span class="stat-cell">P</span><span class="stat-cell">GF</span><span class="stat-cell">GC</span><span class="stat-cell">DG</span><span class="stat-cell">PTS</span></div>'
+        for eq in eq_g:
+            img = f"data:image/png;base64,{img_to_base64(eq['logo'])}" if eq['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
+            html += f'<div class="grid-posiciones" style="border-bottom:1px solid #ffffff10;"><div style="display:flex;align-items:center;"><img src="{img}" style="width:24px;margin-right:12px;">{eq["nombre"]}</div><span class="stat-cell">{eq["PJ"]}</span><span class="stat-cell">{eq["G"]}</span><span class="stat-cell">{eq["E"]}</span><span class="stat-cell">{eq["P"]}</span><span class="stat-cell">{eq["GF"]}</span><span class="stat-cell">{eq["GC"]}</span><span class="stat-cell">{eq["DG"]}</span><span class="stat-cell" style="color:#FFD700">{eq["PTS"]}</span></div>'
+        st.markdown(html + '</div>', unsafe_allow_html=True)
+
+with t_gol:
+    if st.session_state.goleadores:
+        # Contenedor principal de la tabla
+        html_gol = '<div class="main-card">'
+        # Cabecera
+        html_gol += '<div class="grid-goleadores header-grid"><span>JUGADOR</span><span class="stat-cell">EQUIPO</span><span class="stat-cell">GOLES</span></div>'
+        # Filas de datos (ordenadas por goles)
+        for g in sorted(st.session_state.goleadores, key=lambda x: x['goles'], reverse=True):
+            html_gol += f'''
+            <div class="grid-goleadores">
+                <span style="font-weight:900; text-transform:uppercase;">{g["nombre"]}</span>
+                <span class="stat-cell" style="color:#FFD700; font-size:0.9em;">{g["equipo"]}</span>
+                <span class="stat-cell" style="font-size:1.2em;">{g["goles"]}</span>
             </div>
-        </div>'''
-        st.markdown(html_bracket, unsafe_allow_html=True)
-
-    with t_res:
-        if st.session_state.partidos:
-            df = pd.DataFrame(st.session_state.partidos)
-            if "fecha" not in df.columns: df["fecha"] = "S/D"
-            df = df.fillna("S/D").sort_values(by="fecha", ascending=False)
-            l_map = {i['nombre']: i['logo'] for i in st.session_state.equipos.values()}
-            for f in df['fecha'].unique():
-                st.markdown(f'<div class="date-divider">{f}</div>', unsafe_allow_html=True)
-                html_res = '<div class="main-card">'
-                for _, p in df[df['fecha'] == f].iterrows():
-                    s_l = f"data:image/png;base64,{img_to_base64(l_map.get(p['local']))}" if l_map.get(p['local']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                    s_v = f"data:image/png;base64,{img_to_base64(l_map.get(p['visitante']))}" if l_map.get(p['visitante']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                    gl_t = p['goles_l'] if p['goles_l'] is not None else "-"
-                    gv_t = p['goles_v'] if p['goles_v'] is not None else "-"
-                    html_res += f'<div style="display:flex;align-items:center;justify-content:center;padding:15px;border-bottom:1px solid #ffffff11;"><div style="flex:1;text-align:right;">{p["local"]} <img src="{s_l}" width="24"></div><div style="width:110px;text-align:center;color:#FFD700;font-weight:900;font-size:1.5em;">{gl_t}-{gv_t}</div><div style="flex:1;text-align:left;"><img src="{s_v}" width="24"> {p["visitante"]}</div></div>'
-                st.markdown(html_res + '</div>', unsafe_allow_html=True)
-
-    with t_gol:
-        if st.session_state.goleadores:
-            html_gol = '<div class="main-card"><div class="grid-goleadores header-grid"><span>JUGADOR</span><span class="stat-cell">EQUIPO</span><span class="stat-cell">GOLES</span></div>'
-            for g in sorted(st.session_state.goleadores, key=lambda x: x['goles'], reverse=True):
-                html_gol += f'<div class="grid-goleadores" style="border-bottom:1px solid #ffffff10;"><span style="font-weight:700;">{g["nombre"]}</span><span class="stat-cell" style="color:#FFD700;">{g["equipo"]}</span><span class="stat-cell">{g["goles"]}</span></div>'
-            st.markdown(html_gol + '</div>', unsafe_allow_html=True)
+            '''
+        html_gol += '</div>'
+        st.markdown(html_gol, unsafe_allow_html=True)
+    else:
+        st.info("Aún no hay goleadores registrados.")
 
 # --- 6. PANEL ADMINISTRADOR ---
 with st.sidebar:
@@ -237,30 +184,44 @@ with st.sidebar:
         if st.button("Cerrar Sesión"): st.session_state.logged_in = False; st.rerun()
         adm_t = st.tabs(["LOGOS", "EQ", "GR", "ELIM", "GOL", "💾"])
         
-        with adm_t[2]:
-            eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
-            fecha_p = st.date_input("Fecha", datetime.now())
-            l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
-            p_jugado = st.checkbox("¿Se jugó?", value=True)
-            gl = st.number_input("GL", 0) if p_jugado else None
-            gv = st.number_input("GV", 0) if p_jugado else None
-            if st.button("Registrar"):
-                st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
-                save_to_disk(); st.rerun()
-        
-        with adm_t[3]:
-            for f in ["cuartos", "semis", "final"]:
-                with st.expander(f.upper()):
-                    for i in range(len(st.session_state.fase_final[f]) if isinstance(st.session_state.fase_final[f], list) else 1):
-                        target = st.session_state.fase_final[f][i] if isinstance(st.session_state.fase_final[f], list) else st.session_state.fase_final[f]
-                        target["L"] = st.selectbox(f"L {f}{i}", [""]+eqs, index=0, key=f"l{f}{i}")
-                        target["V"] = st.selectbox(f"V {f}{i}", [""]+eqs, index=0, key=f"v{f}{i}")
-                        played = st.checkbox("Resultado", key=f"c{f}{i}")
-                        target["gl"] = st.number_input("GL", 0, key=f"gl{f}{i}") if played else None
-                        target["gv"] = st.number_input("GV", 0, key=f"gv{f}{i}") if played else None
-            if st.button("Guardar"): save_to_disk(); st.rerun()
+        with adm_t[4]:
+            st.subheader("⚽ Registrar Goleador")
+            eqs_nombres = sorted([i['nombre'] for i in st.session_state.equipos.values()])
             
+            with st.form("nuevo_goleador", clear_on_submit=True):
+                col1, col2, col3 = st.columns([2, 2, 1])
+                nuevo_nombre = col1.text_input("Nombre del Jugador")
+                nuevo_equipo = col2.selectbox("Equipo", eqs_nombres)
+                nuevos_goles = col3.number_input("Goles", min_value=0, step=1)
+                
+                if st.form_submit_button("Añadir Jugador"):
+                    if nuevo_nombre:
+                        st.session_state.goleadores.append({
+                            "nombre": nuevo_nombre.upper(),
+                            "equipo": nuevo_equipo,
+                            "goles": nuevos_goles
+                        })
+                        save_to_disk()
+                        st.success(f"{nuevo_nombre} añadido.")
+                        st.rerun()
+
+            st.divider()
+            st.subheader("📝 Gestionar Goleadores")
+            
+            for i, gol in enumerate(st.session_state.goleadores):
+                with st.expander(f"{gol['nombre']} ({gol['equipo']}) - {gol['goles']} Goles"):
+                    c1, c2, c3 = st.columns([2, 1, 1])
+                    nuevo_valor = c1.number_input("Editar Goles", value=gol['goles'], key=f"edit_g_{i}")
+                    if c2.button("💾 Guardar", key=f"save_g_{i}"):
+                        st.session_state.goleadores[i]['goles'] = nuevo_valor
+                        save_to_disk()
+                        st.rerun()
+                    if c3.button("🗑️ Borrar", key=f"del_g_{i}"):
+                        st.session_state.goleadores.pop(i)
+                        save_to_disk()
+                        st.rerun()
+
         with adm_t[5]:
             if os.path.exists(DB_FILE):
                 with open(DB_FILE, "r") as f:
-                    st.download_button("Download JSON", f.read(), "torneo.json")
+                    st.download_button("Descargar Backup JSON", f.read(), "data_torneo.json")
