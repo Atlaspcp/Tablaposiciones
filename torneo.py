@@ -96,15 +96,27 @@ st.markdown("""
     .header-grid { background: linear-gradient(90deg, #00124d 0%, #ff3b3b33 100%); border-bottom: 3px solid #FFD700; font-weight: 900; }
     .stat-cell { text-align: center; font-weight: bold; color: white !important; }
 
-    .bracket-scroll { overflow-x: auto; width: 100%; }
-    .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; min-width: 1050px; padding: 20px 0; }
-    .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 550px; width: 240px; }
-    .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; margin: 15px 0; }
+    .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
+    .bracket-wrapper { 
+        display: flex; 
+        justify-content: space-around; 
+        align-items: center; 
+        min-width: 1100px; 
+    }
+    .bracket-column { 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: center; 
+        gap: 40px;
+        width: 240px; 
+        flex-shrink: 0;
+    }
+    .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; width: 100%; }
     .ko-score { 
         background: #FFD700; color: #000; font-weight: 900; width: 32px; height: 28px; 
         display: flex; align-items: center; justify-content: center; border-radius: 3px; 
     }
-    .final-center { width: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .final-center { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
     .date-divider { background: #FFD700; color: black; padding: 5px 20px; font-weight: 900; border-radius: 4px; margin: 25px 0 10px 0; display: inline-block; }
 </style>
@@ -125,17 +137,17 @@ def render_match(match):
     
     return f'''
     <div class="match-box-ko">
-        <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom:8px; width:100%;">
-            <div style="display:flex; align-items:center; overflow:hidden;">
-                <img src="{img1}" style="width:22px; margin-right:8px; flex-shrink:0;">
-                <span style="font-size:0.8em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">{t1["nombre"] or "---"}</span>
+        <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; overflow:hidden; flex:1;">
+                <img src="{img1}" style="width:20px; height:20px; margin-right:8px; flex-shrink:0;">
+                <span style="font-size:0.75em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">{t1["nombre"] or "TBD"}</span>
             </div>
             <span class="ko-score">{gl}</span>
         </div>
-        <div style="display:flex; align-items:center; justify-content: space-between; width:100%;">
-            <div style="display:flex; align-items:center; overflow:hidden;">
-                <img src="{img2}" style="width:22px; margin-right:8px; flex-shrink:0;">
-                <span style="font-size:0.8em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">{t2["nombre"] or "---"}</span>
+        <div style="display:flex; align-items:center; justify-content: space-between;">
+            <div style="display:flex; align-items:center; overflow:hidden; flex:1;">
+                <img src="{img2}" style="width:20px; height:20px; margin-right:8px; flex-shrink:0;">
+                <span style="font-size:0.75em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">{t2["nombre"] or "TBD"}</span>
             </div>
             <span class="ko-score">{gv}</span>
         </div>
@@ -186,7 +198,27 @@ if not st.session_state.get('logged_in', False):
     with t_ff:
         ff = st.session_state.fase_final
         logo_f = f"data:image/png;base64,{img_to_base64(st.session_state.logo_final)}" if st.session_state.logo_final else None
-        html_bracket = f'''<div class="bracket-scroll"><div class="bracket-wrapper"><div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}</div><div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][0])}</div><div class="final-center">{"<img src='"+logo_f+"' width=160 style='filter:drop-shadow(0 0 15px #FFD700)'>" if logo_f else "<h2>FINAL</h2>"}<h1 style="color:white !important;margin:15px 0;">GRAN FINAL</h1>{render_match(ff["final"])}</div><div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][1])}</div><div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}</div></div></div>'''
+        
+        # Construcción manual para evitar errores de balanceo de etiquetas
+        html_bracket = f'<div class="bracket-scroll"><div class="bracket-wrapper">'
+        
+        # Lado Izquierdo: Cuartos 1-2
+        html_bracket += f'<div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}</div>'
+        
+        # Lado Izquierdo: Semifinal 1
+        html_bracket += f'<div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][0])}</div>'
+        
+        # Centro: Logo y Final
+        logo_img = f'<img src="{logo_f}" width="160" style="filter:drop-shadow(0 0 15px #FFD700)">' if logo_f else '<h2>FINAL</h2>'
+        html_bracket += f'<div class="final-center">{logo_img}<h1 style="color:white !important;margin:15px 0;">GRAN FINAL</h1>{render_match(ff["final"])}</div>'
+        
+        # Lado Derecho: Semifinal 2
+        html_bracket += f'<div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][1])}</div>'
+        
+        # Lado Derecho: Cuartos 3-4
+        html_bracket += f'<div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}</div>'
+        
+        html_bracket += '</div></div>'
         st.markdown(html_bracket, unsafe_allow_html=True)
 
     with t_res:
@@ -245,38 +277,14 @@ with st.sidebar:
             eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
             fecha_p = st.date_input("Fecha", datetime.now())
             l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
-            partido_jugado = st.checkbox("¿Se ha jugado el partido?", value=True)
-            if partido_jugado:
-                gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
-            else:
-                gl, gv = None, None
-                st.info("Marcador pendiente (-).")
+            gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
             if st.button("Registrar Partido"):
                 st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
                 save_to_disk(); st.rerun()
             st.divider()
-            st.subheader("Editar Partidos")
             for i, p in enumerate(st.session_state.partidos):
-                f_disp = p.get('fecha', 'Sin Fecha')
-                l_disp = p.get('local', 'Equipo L')
-                v_disp = p.get('visitante', 'Equipo V')
-                with st.expander(f"{f_disp} | {l_disp} vs {v_disp}"):
-                    jugado_edit = st.checkbox("Marcador ingresado", value=(p.get('goles_l') is not None), key=f"chkp{i}")
-                    if jugado_edit:
-                        val_l = p.get('goles_l', 0) if p.get('goles_l') is not None else 0
-                        val_v = p.get('goles_v', 0) if p.get('goles_v') is not None else 0
-                        c1, c2 = st.columns(2)
-                        new_gl = c1.number_input(f"G {l_disp}", value=val_l, key=f"egl{i}")
-                        new_gv = c2.number_input(f"G {v_disp}", value=val_v, key=f"egv{i}")
-                    else:
-                        new_gl, new_gv = None, None
-                    b_col1, b_col2 = st.columns(2)
-                    if b_col1.button("💾 Actualizar", key=f"updp{i}"):
-                        st.session_state.partidos[i]['goles_l'] = new_gl
-                        st.session_state.partidos[i]['goles_v'] = new_gv
-                        save_to_disk(); st.rerun()
-                    if b_col2.button("🗑️ Eliminar", key=f"delp{i}"):
-                        st.session_state.partidos.pop(i); save_to_disk(); st.rerun()
+                if st.button(f"🗑️ Eliminar {p['local']} vs {p['visitante']}", key=f"delp{i}"):
+                    st.session_state.partidos.pop(i); save_to_disk(); st.rerun()
 
         with adm_t[3]:
             eqs_ko = [""] + eqs
@@ -303,21 +311,14 @@ with st.sidebar:
                 st.session_state.goleadores.append({"nombre": n_gol, "equipo": e_gol, "goles": g_gol})
                 save_to_disk(); st.rerun()
             st.divider()
-            st.subheader("Gestionar Goleadores")
             for i, gol in enumerate(st.session_state.goleadores):
                 with st.expander(f"{gol['nombre']} ({gol['equipo']})"):
                     edit_g = st.number_input(f"Goles de {gol['nombre']}", value=gol['goles'], key=f"editg{i}")
-                    c1, c2, c3, c4 = st.columns(4)
+                    c1, c2 = st.columns(2)
                     if c1.button("💾", key=f"updg{i}"):
                         st.session_state.goleadores[i]['goles'] = edit_g
                         save_to_disk(); st.rerun()
-                    if c2.button("🔼", key=f"upg{i}") and i > 0:
-                        st.session_state.goleadores[i], st.session_state.goleadores[i-1] = st.session_state.goleadores[i-1], st.session_state.goleadores[i]
-                        save_to_disk(); st.rerun()
-                    if c3.button("🔽", key=f"dowg{i}") and i < len(st.session_state.goleadores)-1:
-                        st.session_state.goleadores[i], st.session_state.goleadores[i+1] = st.session_state.goleadores[i+1], st.session_state.goleadores[i]
-                        save_to_disk(); st.rerun()
-                    if c4.button("🗑️", key=f"delg{i}"):
+                    if c2.button("🗑️", key=f"delg{i}"):
                         st.session_state.goleadores.pop(i); save_to_disk(); st.rerun()
 
         with adm_t[5]:
