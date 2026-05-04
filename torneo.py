@@ -79,30 +79,26 @@ st.markdown("""
     
     .txt-celeste { color: #7db1ff !important; }
     .txt-red { color: #ff3b3b !important; }
-    .txt-white { color: #ffffff !important; }
-    .txt-gold { color: #FFD700 !important; }
-
+    
     [data-testid="stSidebar"] h2 { color: #000000 !important; font-weight: 900; }
-
     h1, h2, h3, .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 900; }
-    .nam-title { font-size: clamp(2.5em, 8vw, 4.5em); text-align: center; font-weight: 900; letter-spacing: -2px; line-height: 1; color: white; margin-bottom: 20px; }
+    .nam-title { font-size: clamp(2.5em, 8vw, 4.5em); text-align: center; font-weight: 900; letter-spacing: -2px; color: white; margin-bottom: 20px; }
 
     .main-card {
         background: rgba(0, 10, 60, 0.6); border-radius: 12px; margin-bottom: 25px;
-        border: 1px solid #FFD70033; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
+        border: 1px solid #FFD70033; color: white; backdrop-filter: blur(10px);
         overflow-x: auto;
     }
 
     .grid-posiciones { display: grid; grid-template-columns: 2fr repeat(8, 45px); align-items: center; min-width: 650px; padding: 10px 15px; }
+    .grid-goleadores { display: grid; grid-template-columns: 2fr 1.5fr 1fr; align-items: center; min-width: 500px; padding: 10px 15px; }
+    
     .header-grid { background: linear-gradient(90deg, #00124d 0%, #ff3b3b33 100%); border-bottom: 3px solid #FFD700; font-weight: 900; }
     .stat-cell { text-align: center; font-weight: bold; color: white !important; }
 
-    .grid-goleadores { display: grid; grid-template-columns: 2fr 1.5fr 1fr; align-items: center; min-width: 500px; padding: 10px 15px; }
-
-    .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
+    .bracket-scroll { overflow-x: auto; width: 100%; }
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; min-width: 1050px; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 550px; width: 240px; }
-    .bracket-column h4 { color: white !important; text-align: center; font-weight: 900; margin-bottom: 10px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; margin: 15px 0; }
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 28px; text-align: center; border-radius: 3px; }
     .final-center { width: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -166,28 +162,7 @@ if not st.session_state.get('logged_in', False):
     with t_ff:
         ff = st.session_state.fase_final
         logo_f = f"data:image/png;base64,{img_to_base64(st.session_state.logo_final)}" if st.session_state.logo_final else None
-        html_bracket = f'''
-<div class="bracket-scroll">
-<div class="bracket-wrapper">
-<div class="bracket-column">
-<h4>CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}
-</div>
-<div class="bracket-column">
-<h4>SEMIFINAL</h4>{render_match(ff["semis"][0])}
-</div>
-<div class="final-center">
-{"<img src='"+logo_f+"' width=160 style='filter:drop-shadow(0 0 15px #FFD700)'>" if logo_f else "<h2>FINAL</h2>"}
-<h1 style="color:white !important;margin:15px 0;">GRAN FINAL</h1>
-{render_match(ff["final"])}
-</div>
-<div class="bracket-column">
-<h4>SEMIFINAL</h4>{render_match(ff["semis"][1])}
-</div>
-<div class="bracket-column">
-<h4>CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}
-</div>
-</div>
-</div>'''
+        html_bracket = f'''<div class="bracket-scroll"><div class="bracket-wrapper"><div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}</div><div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][0])}</div><div class="final-center">{"<img src='"+logo_f+"' width=160 style='filter:drop-shadow(0 0 15px #FFD700)'>" if logo_f else "<h2>FINAL</h2>"}<h1 style="color:white !important;margin:15px 0;">GRAN FINAL</h1>{render_match(ff["final"])}</div><div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][1])}</div><div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}</div></div></div>'''
         st.markdown(html_bracket, unsafe_allow_html=True)
 
     with t_res:
@@ -240,41 +215,29 @@ with st.sidebar:
                         save_to_disk(); st.rerun()
 
         with adm_t[2]:
-                    st.subheader("Añadir Partido")
-                    eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
-                    fecha_p = st.date_input("Fecha", datetime.now())
-                    l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
-                    gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
-                    if st.button("Registrar Partido"):
-                        st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
+            st.subheader("Añadir Partido")
+            eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
+            fecha_p = st.date_input("Fecha", datetime.now())
+            l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
+            gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
+            if st.button("Registrar Partido"):
+                st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
+                save_to_disk(); st.rerun()
+            
+            st.divider()
+            st.subheader("Editar Partidos")
+            for i, p in enumerate(st.session_state.partidos):
+                f_disp = p.get('fecha', 'S/D')
+                with st.expander(f"{f_disp} | {p['local']} vs {p['visitante']}"):
+                    c1, c2 = st.columns(2)
+                    new_gl = c1.number_input(f"G {p['local']}", value=p['goles_l'], key=f"egl{i}")
+                    new_gv = c2.number_input(f"G {p['visitante']}", value=p['goles_v'], key=f"egv{i}")
+                    if st.button("💾 Actualizar", key=f"updp{i}"):
+                        st.session_state.partidos[i]['goles_l'] = new_gl
+                        st.session_state.partidos[i]['goles_v'] = new_gv
                         save_to_disk(); st.rerun()
-                    
-                    st.divider()
-                    st.subheader("Editar Partidos Existentes")
-                    
-                    # --- CORRECCIÓN DEL ERROR AQUÍ ---
-                    for i, p in enumerate(st.session_state.partidos):
-                        # Usamos .get('fecha', 'S/D') para que si no existe la llave, no explote el código
-                        fecha_display = p.get('fecha', 'Sin Fecha')
-                        local_display = p.get('local', 'Equipo L')
-                        visitante_display = p.get('visitante', 'Equipo V')
-                        
-                        with st.expander(f"{fecha_display} | {local_display} vs {visitante_display}"):
-                            c1, c2 = st.columns(2)
-                            new_gl = c1.number_input(f"Goles {local_display}", value=p['goles_l'], key=f"egl{i}")
-                            new_gv = c2.number_input(f"Goles {visitante_display}", value=p['goles_v'], key=f"egv{i}")
-                            
-                            b_col1, b_col2 = st.columns(2)
-                            if b_col1.button("💾 Actualizar", key=f"upd{i}"):
-                                st.session_state.partidos[i]['goles_l'] = new_gl
-                                st.session_state.partidos[i]['goles_v'] = new_gv
-                                # Aprovechamos de asignarle la fecha actual si no tenía una
-                                if 'fecha' not in st.session_state.partidos[i]:
-                                    st.session_state.partidos[i]['fecha'] = str(datetime.now().date())
-                                save_to_disk(); st.rerun()
-                            if b_col2.button("🗑️ Eliminar", key=f"delp{i}"):
-                                st.session_state.partidos.pop(i)
-                                save_to_disk(); st.rerun()
+                    if st.button("🗑️ Eliminar", key=f"delp{i}"):
+                        st.session_state.partidos.pop(i); save_to_disk(); st.rerun()
 
         with adm_t[3]:
             eqs_ko = [""] + eqs
@@ -289,17 +252,37 @@ with st.sidebar:
             if st.button("Guardar Eliminatoria"): save_to_disk(); st.rerun()
 
         with adm_t[4]:
-            n = st.text_input("Jugador").upper()
-            e = st.selectbox("Equipo", eqs)
-            g = st.number_input("Goles", 0)
-            if st.button("Añadir"):
-                st.session_state.goleadores.append({"nombre": n, "equipo": e, "goles": g})
+            st.subheader("Añadir Goleador")
+            n_gol = st.text_input("Nombre Jugador").upper()
+            e_gol = st.selectbox("Equipo Goleador", eqs)
+            g_gol = st.number_input("Goles Iniciales", 0)
+            if st.button("➕ Añadir"):
+                st.session_state.goleadores.append({"nombre": n_gol, "equipo": e_gol, "goles": g_gol})
                 save_to_disk(); st.rerun()
+            
+            st.divider()
+            st.subheader("Gestionar Goleadores")
             for i, gol in enumerate(st.session_state.goleadores):
-                c1, c2 = st.columns([3,1])
-                c1.write(gol['nombre'])
-                if c2.button("🗑️", key=f"delg{i}"):
-                    st.session_state.goleadores.pop(i); save_to_disk(); st.rerun()
+                with st.expander(f"{gol['nombre']} ({gol['equipo']})"):
+                    # Editar goles
+                    edit_g = st.number_input(f"Goles de {gol['nombre']}", value=gol['goles'], key=f"editg{i}")
+                    
+                    c1, c2, c3, c4 = st.columns(4)
+                    # Botón Actualizar
+                    if c1.button("💾", key=f"updg{i}", help="Actualizar goles"):
+                        st.session_state.goleadores[i]['goles'] = edit_g
+                        save_to_disk(); st.rerun()
+                    # Mover Arriba
+                    if c2.button("🔼", key=f"upg{i}") and i > 0:
+                        st.session_state.goleadores[i], st.session_state.goleadores[i-1] = st.session_state.goleadores[i-1], st.session_state.goleadores[i]
+                        save_to_disk(); st.rerun()
+                    # Mover Abajo
+                    if c3.button("🔽", key=f"dowg{i}") and i < len(st.session_state.goleadores)-1:
+                        st.session_state.goleadores[i], st.session_state.goleadores[i+1] = st.session_state.goleadores[i+1], st.session_state.goleadores[i]
+                        save_to_disk(); st.rerun()
+                    # Eliminar
+                    if c4.button("🗑️", key=f"delg{i}"):
+                        st.session_state.goleadores.pop(i); save_to_disk(); st.rerun()
 
         with adm_t[5]:
             if os.path.exists(DB_FILE):
