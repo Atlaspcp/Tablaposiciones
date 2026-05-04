@@ -242,11 +242,53 @@ with st.sidebar:
             if st.button("Guardar Eliminatorias"): save_to_disk(); st.rerun()
 
         with adm_t[4]:
-            nj, ej = st.text_input("Jugador").upper(), st.selectbox("Equipo", eqs, key="gol_eq")
-            gj = st.number_input("Goles", 0, step=1)
-            if st.button("Añadir Goleador"):
-                st.session_state.goleadores.append({"nombre": nj, "equipo": ej, "goles": int(gj)})
-                save_to_disk(); st.rerun()
+                    st.subheader("Registrar Goleador")
+                    nj = st.text_input("Nombre del Jugador").upper()
+                    ej = st.selectbox("Equipo", eqs, key="gol_eq")
+                    gj = st.number_input("Goles Iniciales", 0, step=1)
+                    
+                    if st.button("➕ Añadir Goleador"):
+                        if nj:
+                            st.session_state.goleadores.append({"nombre": nj, "equipo": ej, "goles": int(gj)})
+                            save_to_disk()
+                            st.rerun()
+                        else:
+                            st.error("Escribe un nombre")
+        
+                    st.divider()
+                    st.subheader("Gestionar Goleadores")
+                    
+                    # Iteramos sobre la lista de goleadores en el session_state
+                    for i, gol in enumerate(st.session_state.goleadores):
+                        with st.expander(f"{gol['nombre']} ({gol['equipo']}) - {gol['goles']} Goles"):
+                            c1, c2, c3 = st.columns([2, 1, 1])
+                            
+                            # Modificar cantidad de goles
+                            nuevo_goles = c1.number_input("Goles", value=int(gol['goles']), key=f"edit_gol_{i}", step=1)
+                            if nuevo_goles != gol['goles']:
+                                st.session_state.goleadores[i]['goles'] = int(nuevo_goles)
+                                save_to_disk()
+                                st.rerun()
+                            
+                            # Botones de posición
+                            col_up, col_down, col_del = st.columns(3)
+                            
+                            if col_up.button("🔼", key=f"up_{i}") and i > 0:
+                                st.session_state.goleadores[i], st.session_state.goleadores[i-1] = \
+                                    st.session_state.goleadores[i-1], st.session_state.goleadores[i]
+                                save_to_disk()
+                                st.rerun()
+                                
+                            if col_down.button("🔽", key=f"down_{i}") and i < len(st.session_state.goleadores) - 1:
+                                st.session_state.goleadores[i], st.session_state.goleadores[i+1] = \
+                                    st.session_state.goleadores[i+1], st.session_state.goleadores[i]
+                                save_to_disk()
+                                st.rerun()
+                                
+                            if col_del.button("🗑️", key=f"del_g_{i}"):
+                                st.session_state.goleadores.pop(i)
+                                save_to_disk()
+                                st.rerun()
 
         with adm_t[5]:
             st.subheader("Mantenimiento")
