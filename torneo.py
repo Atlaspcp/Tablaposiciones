@@ -196,9 +196,9 @@ if not st.session_state.get('logged_in', False):
 
 # --- 6. PANEL ADMINISTRADOR ---
 with st.sidebar:
-    st.header("🔐 Configuración NAM")
+    st.header("🔐 Zona Administradores")
     if not st.session_state.get('logged_in', False):
-        if st.text_input("Clave", type="password") == "admin123":
+        if st.text_input("Clave", type="password") == "organizadores2026":
             if st.button("Entrar"): st.session_state.logged_in = True; st.rerun()
     else:
         if st.button("Cerrar Sesión"): st.session_state.logged_in = False; st.rerun()
