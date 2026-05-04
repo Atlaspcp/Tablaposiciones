@@ -19,6 +19,12 @@ def img_to_base64(image):
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
 
+def crear_backup():
+    if os.path.exists(DB_FILE):
+        if not os.path.exists("backups"): os.makedirs("backups")
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        shutil.copy2(DB_FILE, f"backups/backup_{ts}.json")
+
 def save_to_disk():
     data_to_save = {
         "partidos": st.session_state.partidos,
@@ -35,6 +41,7 @@ def save_to_disk():
         }
     with open(DB_FILE, "w") as f:
         json.dump(data_to_save, f)
+    crear_backup()
 
 def inicializar_fase_final():
     return {
@@ -72,30 +79,30 @@ st.markdown("""
     
     .txt-celeste { color: #7db1ff !important; }
     .txt-red { color: #ff3b3b !important; }
-    h1, h2, h3, .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 900; }
-    .nam-title { font-size: clamp(2.5em, 8vw, 4.5em); text-align: center; font-weight: 900; letter-spacing: -2px; color: white; margin-bottom: 20px; }
-    
-    /* Sidebar Negro */
+    .txt-white { color: #ffffff !important; }
+    .txt-gold { color: #FFD700 !important; }
+
     [data-testid="stSidebar"] h2 { color: #000000 !important; font-weight: 900; }
+
+    h1, h2, h3, .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 900; }
+    .nam-title { font-size: clamp(2.5em, 8vw, 4.5em); text-align: center; font-weight: 900; letter-spacing: -2px; line-height: 1; color: white; margin-bottom: 20px; }
 
     .main-card {
         background: rgba(0, 10, 60, 0.6); border-radius: 12px; margin-bottom: 25px;
-        border: 1px solid #FFD70033; color: white; backdrop-filter: blur(10px);
+        border: 1px solid #FFD70033; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
         overflow-x: auto;
     }
 
-    /* GRIDS */
     .grid-posiciones { display: grid; grid-template-columns: 2fr repeat(8, 45px); align-items: center; min-width: 650px; padding: 10px 15px; }
-    .grid-goleadores { display: grid; grid-template-columns: 2fr 1.5fr 1fr; align-items: center; min-width: 500px; padding: 10px 15px; }
-    
     .header-grid { background: linear-gradient(90deg, #00124d 0%, #ff3b3b33 100%); border-bottom: 3px solid #FFD700; font-weight: 900; }
     .stat-cell { text-align: center; font-weight: bold; color: white !important; }
 
-    /* FASE FINAL */
-    .bracket-scroll { overflow-x: auto; width: 100%; }
+    .grid-goleadores { display: grid; grid-template-columns: 2fr 1.5fr 1fr; align-items: center; min-width: 500px; padding: 10px 15px; }
+
+    .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; min-width: 1050px; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 550px; width: 240px; }
-    .bracket-column h4 { color: white !important; text-align: center; margin-bottom: 10px; }
+    .bracket-column h4 { color: white !important; text-align: center; font-weight: 900; margin-bottom: 10px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; margin: 15px 0; }
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 28px; text-align: center; border-radius: 3px; }
     .final-center { width: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -139,7 +146,7 @@ if 'equipos' not in st.session_state:
         st.session_state.partidos, st.session_state.goleadores = [], []
         st.session_state.fase_final = inicializar_fase_final()
 
-# --- 5. INTERFAZ ---
+# --- 5. INTERFAZ PÚBLICA ---
 st.markdown('<h1 class="nam-title">#<span class="txt-celeste">N</span><span class="txt-red">A</span>MLEAGUE2026</h1>', unsafe_allow_html=True)
 
 if not st.session_state.get('logged_in', False):
@@ -214,12 +221,14 @@ with st.sidebar:
     else:
         if st.button("Cerrar Sesión"): st.session_state.logged_in = False; st.rerun()
         adm_t = st.tabs(["LOGOS", "EQ", "GR", "ELIM", "GOL", "💾"])
+        
         with adm_t[0]:
             lt, lf = st.file_uploader("Logo Principal"), st.file_uploader("Logo Final")
             if st.button("Guardar Logos"):
                 if lt: st.session_state.logo_torneo = Image.open(lt)
                 if lf: st.session_state.logo_final = Image.open(lf)
                 save_to_disk(); st.rerun()
+        
         with adm_t[1]:
             for id_e, inf in st.session_state.equipos.items():
                 with st.expander(f"Editar {inf['nombre']}"):
@@ -229,7 +238,9 @@ with st.sidebar:
                         st.session_state.equipos[id_e]['nombre'] = nn.upper()
                         if nl: st.session_state.equipos[id_e]['logo'] = Image.open(nl)
                         save_to_disk(); st.rerun()
+
         with adm_t[2]:
+            st.subheader("Añadir Partido")
             eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
             fecha_p = st.date_input("Fecha", datetime.now())
             l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
@@ -237,6 +248,25 @@ with st.sidebar:
             if st.button("Registrar Partido"):
                 st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
                 save_to_disk(); st.rerun()
+            
+            st.divider()
+            st.subheader("Editar Partidos Existentes")
+            # Listado de partidos para editar/eliminar
+            for i, p in enumerate(st.session_state.partidos):
+                with st.expander(f"{p['fecha']} | {p['local']} vs {p['visitante']}"):
+                    c1, c2 = st.columns(2)
+                    new_gl = c1.number_input(f"Goles {p['local']}", value=p['goles_l'], key=f"egl{i}")
+                    new_gv = c2.number_input(f"Goles {p['visitante']}", value=p['goles_v'], key=f"egv{i}")
+                    
+                    b_col1, b_col2 = st.columns(2)
+                    if b_col1.button("💾 Actualizar", key=f"upd{i}"):
+                        st.session_state.partidos[i]['goles_l'] = new_gl
+                        st.session_state.partidos[i]['goles_v'] = new_gv
+                        save_to_disk(); st.rerun()
+                    if b_col2.button("🗑️ Eliminar", key=f"delp{i}"):
+                        st.session_state.partidos.pop(i)
+                        save_to_disk(); st.rerun()
+
         with adm_t[3]:
             eqs_ko = [""] + eqs
             for f in ["cuartos", "semis", "final"]:
@@ -248,6 +278,7 @@ with st.sidebar:
                         target["gl"] = st.number_input(f"gl{f}{i}", value=target["gl"])
                         target["gv"] = st.number_input(f"gv{f}{i}", value=target["gv"])
             if st.button("Guardar Eliminatoria"): save_to_disk(); st.rerun()
+
         with adm_t[4]:
             n = st.text_input("Jugador").upper()
             e = st.selectbox("Equipo", eqs)
@@ -258,8 +289,9 @@ with st.sidebar:
             for i, gol in enumerate(st.session_state.goleadores):
                 c1, c2 = st.columns([3,1])
                 c1.write(gol['nombre'])
-                if c2.button("🗑️", key=f"del{i}"):
+                if c2.button("🗑️", key=f"delg{i}"):
                     st.session_state.goleadores.pop(i); save_to_disk(); st.rerun()
+
         with adm_t[5]:
             if os.path.exists(DB_FILE):
                 with open(DB_FILE, "r") as f:
