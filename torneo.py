@@ -258,19 +258,26 @@ with st.sidebar:
                     st.divider()
                     st.subheader("Gestionar Goleadores")
                     
-                    # Iteramos sobre la lista de goleadores en el session_state
                     for i, gol in enumerate(st.session_state.goleadores):
                         with st.expander(f"{gol['nombre']} ({gol['equipo']}) - {gol['goles']} Goles"):
-                            c1, c2, c3 = st.columns([2, 1, 1])
+                            # --- FILA DE CONTROL DE GOLES ---
+                            c_label, c_minus, c_plus = st.columns([2, 1, 1])
+                            c_label.write(f"**Goles actuales: {gol['goles']}**")
                             
-                            # Modificar cantidad de goles
-                            nuevo_goles = c1.number_input("Goles", value=int(gol['goles']), key=f"edit_gol_{i}", step=1)
-                            if nuevo_goles != gol['goles']:
-                                st.session_state.goleadores[i]['goles'] = int(nuevo_goles)
+                            if c_minus.button("➖", key=f"min_{i}"):
+                                if st.session_state.goleadores[i]['goles'] > 0:
+                                    st.session_state.goleadores[i]['goles'] -= 1
+                                    save_to_disk()
+                                    st.rerun()
+                            
+                            if c_plus.button("➕", key=f"plus_{i}"):
+                                st.session_state.goleadores[i]['goles'] += 1
                                 save_to_disk()
                                 st.rerun()
                             
-                            # Botones de posición
+                            st.write("---")
+                            
+                            # --- FILA DE POSICIÓN Y ELIMINACIÓN ---
                             col_up, col_down, col_del = st.columns(3)
                             
                             if col_up.button("🔼", key=f"up_{i}") and i > 0:
