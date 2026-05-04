@@ -45,9 +45,9 @@ def save_to_disk():
 
 def inicializar_fase_final():
     return {
-        "cuartos": [{"L": "", "V": "", "gl": 0, "gv": 0} for _ in range(4)],
-        "semis": [{"L": "", "V": "", "gl": 0, "gv": 0} for _ in range(2)],
-        "final": {"L": "", "V": "", "gl": 0, "gv": 0}
+        "cuartos": [{"L": "", "V": "", "gl": None, "gv": None} for _ in range(4)],
+        "semis": [{"L": "", "V": "", "gl": None, "gv": None} for _ in range(2)],
+        "final": {"L": "", "V": "", "gl": None, "gv": None}
     }
 
 def load_from_disk():
@@ -100,7 +100,7 @@ st.markdown("""
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; min-width: 1050px; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 550px; width: 240px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; margin: 15px 0; }
-    .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 28px; text-align: center; border-radius: 3px; }
+    .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 32px; text-align: center; border-radius: 3px; }
     .final-center { width: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
     .date-divider { background: #FFD700; color: black; padding: 5px 20px; font-weight: 900; border-radius: 4px; margin: 25px 0 10px 0; display: inline-block; }
@@ -115,15 +115,38 @@ def get_team_info(name):
 
 def render_match(match):
     t1, t2 = get_team_info(match["L"]), get_team_info(match["V"])
+    gl = match.get("gl") if match.get("gl") is not None else "-"
+    gv = match.get("gv") if match.get("gv") is not None else "-"
     img1 = f"data:image/png;base64,{img_to_base64(t1['logo'])}" if t1['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
     img2 = f"data:image/png;base64,{img_to_base64(t2['logo'])}" if t2['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-    return f'<div class="match-box-ko"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="display:flex;align-items:center;"><img src="{img1}" style="width:22px;margin-right:8px;"><span style="font-size:0.8em;font-weight:700;">{t1["nombre"] or "---"}</span></div><span class="ko-score">{match["gl"]}</span></div><div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;"><img src="{img2}" style="width:22px;margin-right:8px;"><span style="font-size:0.8em;font-weight:700;">{t2["nombre"] or "---"}</span></div><span class="ko-score">{match["gv"]}</span></div></div>'
+    
+    # Mejora de alineación: flex: 1 en el contenedor del nombre para empujar el marcador
+    return f'''
+    <div class="match-box-ko">
+        <div style="display:flex; align-items:center; margin-bottom:8px; width:100%;">
+            <div style="display:flex; align-items:center; flex:1; overflow:hidden;">
+                <img src="{img1}" style="width:22px; margin-right:8px; flex-shrink:0;">
+                <span style="font-size:0.8em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{t1["nombre"] or "---"}</span>
+            </div>
+            <span class="ko-score">{gl}</span>
+        </div>
+        <div style="display:flex; align-items:center; width:100%;">
+            <div style="display:flex; align-items:center; flex:1; overflow:hidden;">
+                <img src="{img2}" style="width:22px; margin-right:8px; flex-shrink:0;">
+                <span style="font-size:0.8em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{t2["nombre"] or "---"}</span>
+            </div>
+            <span class="ko-score">{gv}</span>
+        </div>
+    </div>
+    '''
 
 def calcular_tablas():
     stats = {info['nombre']: {"nombre": info['nombre'], "PJ": 0, "G": 0, "E": 0, "P": 0, "GF": 0, "GC": 0, "DG": 0, "PTS": 0, "grupo": info['grupo'], "logo": info['logo']} for info in st.session_state.equipos.values()}
     for p in st.session_state.partidos:
-        l, v, gl, gv = p['local'], p['visitante'], p['goles_l'], p['goles_v']
-        if l in stats and v in stats:
+        l, v = p['local'], p['visitante']
+        gl, gv = p.get('goles_l'), p.get('goles_v')
+        # Solo sumamos si ambos tienen valor (no son None)
+        if gl is not None and gv is not None and l in stats and v in stats:
             stats[l]["PJ"] += 1; stats[v]["PJ"] += 1
             stats[l]["GF"] += gl; stats[l]["GC"] += gv
             stats[v]["GF"] += gv; stats[v]["GC"] += gl
@@ -177,7 +200,11 @@ if not st.session_state.get('logged_in', False):
                 for _, p in df[df['fecha'] == f].iterrows():
                     s_l = f"data:image/png;base64,{img_to_base64(l_map.get(p['local']))}" if l_map.get(p['local']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
                     s_v = f"data:image/png;base64,{img_to_base64(l_map.get(p['visitante']))}" if l_map.get(p['visitante']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                    html_res += f'<div style="display:flex;align-items:center;justify-content:center;padding:15px;border-bottom:1px solid #ffffff11;min-width:500px;"><div style="flex:1;text-align:right;">{p["local"]} <img src="{s_l}" width="24"></div><div style="width:110px;text-align:center;color:#FFD700;font-weight:900;font-size:1.5em;">{p["goles_l"]}-{p["goles_v"]}</div><div style="flex:1;text-align:left;"><img src="{s_v}" width="24"> {p["visitante"]}</div></div>'
+                    
+                    gl_txt = p['goles_l'] if p['goles_l'] is not None else "-"
+                    gv_txt = p['goles_v'] if p['goles_v'] is not None else "-"
+                    
+                    html_res += f'<div style="display:flex;align-items:center;justify-content:center;padding:15px;border-bottom:1px solid #ffffff11;min-width:500px;"><div style="flex:1;text-align:right;">{p["local"]} <img src="{s_l}" width="24"></div><div style="width:110px;text-align:center;color:#FFD700;font-weight:900;font-size:1.5em;">{gl_txt}-{gv_txt}</div><div style="flex:1;text-align:left;"><img src="{s_v}" width="24"> {p["visitante"]}</div></div>'
                 st.markdown(html_res + '</div>', unsafe_allow_html=True)
 
     with t_gol:
@@ -219,7 +246,15 @@ with st.sidebar:
             eqs = sorted([i['nombre'] for i in st.session_state.equipos.values()])
             fecha_p = st.date_input("Fecha", datetime.now())
             l, v = st.selectbox("Local", eqs), st.selectbox("Visitante", eqs)
-            gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
+            
+            # Opción para dejarlo pendiente
+            partido_jugado = st.checkbox("¿Se ha jugado el partido?", value=True)
+            if partido_jugado:
+                gl, gv = st.number_input("GL", 0), st.number_input("GV", 0)
+            else:
+                gl, gv = None, None
+                st.info("El partido se guardará con marcador pendiente (-).")
+                
             if st.button("Registrar Partido"):
                 st.session_state.partidos.append({"fecha": str(fecha_p), "local": l, "visitante": v, "goles_l": gl, "goles_v": gv})
                 save_to_disk(); st.rerun()
@@ -229,9 +264,16 @@ with st.sidebar:
             for i, p in enumerate(st.session_state.partidos):
                 f_disp = p.get('fecha', 'S/D')
                 with st.expander(f"{f_disp} | {p['local']} vs {p['visitante']}"):
-                    c1, c2 = st.columns(2)
-                    new_gl = c1.number_input(f"G {p['local']}", value=p['goles_l'], key=f"egl{i}")
-                    new_gv = c2.number_input(f"G {p['visitante']}", value=p['goles_v'], key=f"egv{i}")
+                    jugado_edit = st.checkbox("Marcador ingresado", value=(p['goles_l'] is not None), key=f"chkp{i}")
+                    if jugado_edit:
+                        val_l = p['goles_l'] if p['goles_l'] is not None else 0
+                        val_v = p['goles_v'] if p['goles_v'] is not None else 0
+                        c1, c2 = st.columns(2)
+                        new_gl = c1.number_input(f"G {p['local']}", value=val_l, key=f"egl{i}")
+                        new_gv = c2.number_input(f"G {p['visitante']}", value=val_v, key=f"egv{i}")
+                    else:
+                        new_gl, new_gv = None, None
+                    
                     if st.button("💾 Actualizar", key=f"updp{i}"):
                         st.session_state.partidos[i]['goles_l'] = new_gl
                         st.session_state.partidos[i]['goles_v'] = new_gv
@@ -247,8 +289,14 @@ with st.sidebar:
                         target = st.session_state.fase_final[f][i] if isinstance(st.session_state.fase_final[f], list) else st.session_state.fase_final[f]
                         target["L"] = st.selectbox(f"L{f}{i}", eqs_ko, index=eqs_ko.index(target["L"]) if target["L"] in eqs_ko else 0)
                         target["V"] = st.selectbox(f"V{f}{i}", eqs_ko, index=eqs_ko.index(target["V"]) if target["V"] in eqs_ko else 0)
-                        target["gl"] = st.number_input(f"gl{f}{i}", value=target["gl"])
-                        target["gv"] = st.number_input(f"gv{f}{i}", value=target["gv"])
+                        
+                        # Manejo de guiones en eliminatoria
+                        ko_jugado = st.checkbox("Resultado final", value=(target.get("gl") is not None), key=f"ko_j{f}{i}")
+                        if ko_jugado:
+                            target["gl"] = st.number_input(f"gl{f}{i}", value=target["gl"] if target["gl"] is not None else 0)
+                            target["gv"] = st.number_input(f"gv{f}{i}", value=target["gv"] if target["gv"] is not None else 0)
+                        else:
+                            target["gl"], target["gv"] = None, None
             if st.button("Guardar Eliminatoria"): save_to_disk(); st.rerun()
 
         with adm_t[4]:
@@ -264,23 +312,17 @@ with st.sidebar:
             st.subheader("Gestionar Goleadores")
             for i, gol in enumerate(st.session_state.goleadores):
                 with st.expander(f"{gol['nombre']} ({gol['equipo']})"):
-                    # Editar goles
                     edit_g = st.number_input(f"Goles de {gol['nombre']}", value=gol['goles'], key=f"editg{i}")
-                    
                     c1, c2, c3, c4 = st.columns(4)
-                    # Botón Actualizar
-                    if c1.button("💾", key=f"updg{i}", help="Actualizar goles"):
+                    if c1.button("💾", key=f"updg{i}"):
                         st.session_state.goleadores[i]['goles'] = edit_g
                         save_to_disk(); st.rerun()
-                    # Mover Arriba
                     if c2.button("🔼", key=f"upg{i}") and i > 0:
                         st.session_state.goleadores[i], st.session_state.goleadores[i-1] = st.session_state.goleadores[i-1], st.session_state.goleadores[i]
                         save_to_disk(); st.rerun()
-                    # Mover Abajo
                     if c3.button("🔽", key=f"dowg{i}") and i < len(st.session_state.goleadores)-1:
                         st.session_state.goleadores[i], st.session_state.goleadores[i+1] = st.session_state.goleadores[i+1], st.session_state.goleadores[i]
                         save_to_disk(); st.rerun()
-                    # Eliminar
                     if c4.button("🗑️", key=f"delg{i}"):
                         st.session_state.goleadores.pop(i); save_to_disk(); st.rerun()
 
