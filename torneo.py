@@ -100,7 +100,10 @@ st.markdown("""
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; min-width: 1050px; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 550px; width: 240px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; margin: 15px 0; }
-    .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 32px; height: 30px; line-height: 30px; text-align: center; border-radius: 3px; display: inline-block; }
+    .ko-score { 
+        background: #FFD700; color: #000; font-weight: 900; width: 32px; height: 28px; 
+        display: flex; align-items: center; justify-content: center; border-radius: 3px; 
+    }
     .final-center { width: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
     .date-divider { background: #FFD700; color: black; padding: 5px 20px; font-weight: 900; border-radius: 4px; margin: 25px 0 10px 0; display: inline-block; }
@@ -122,15 +125,15 @@ def render_match(match):
     
     return f'''
     <div class="match-box-ko">
-        <div style="display:flex; align-items:center; margin-bottom:8px; width:100%;">
-            <div style="display:flex; align-items:center; flex:1; overflow:hidden;">
+        <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom:8px; width:100%;">
+            <div style="display:flex; align-items:center; overflow:hidden;">
                 <img src="{img1}" style="width:22px; margin-right:8px; flex-shrink:0;">
                 <span style="font-size:0.8em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">{t1["nombre"] or "---"}</span>
             </div>
             <span class="ko-score">{gl}</span>
         </div>
-        <div style="display:flex; align-items:center; width:100%;">
-            <div style="display:flex; align-items:center; flex:1; overflow:hidden;">
+        <div style="display:flex; align-items:center; justify-content: space-between; width:100%;">
+            <div style="display:flex; align-items:center; overflow:hidden;">
                 <img src="{img2}" style="width:22px; margin-right:8px; flex-shrink:0;">
                 <span style="font-size:0.8em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">{t2["nombre"] or "---"}</span>
             </div>
@@ -271,7 +274,6 @@ with st.sidebar:
                     if b_col1.button("💾 Actualizar", key=f"updp{i}"):
                         st.session_state.partidos[i]['goles_l'] = new_gl
                         st.session_state.partidos[i]['goles_v'] = new_gv
-                        if 'fecha' not in st.session_state.partidos[i]: st.session_state.partidos[i]['fecha'] = str(datetime.now().date())
                         save_to_disk(); st.rerun()
                     if b_col2.button("🗑️ Eliminar", key=f"delp{i}"):
                         st.session_state.partidos.pop(i); save_to_disk(); st.rerun()
