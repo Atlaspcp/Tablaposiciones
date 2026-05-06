@@ -102,6 +102,14 @@ st.markdown("""
         margin-bottom: 20px; 
     }
 
+    /* Centrado de la tabla y limitación de ancho */
+    .table-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
     .main-card { 
         background: rgba(0, 10, 60, 0.4); 
         border-radius: 12px; 
@@ -111,13 +119,16 @@ st.markdown("""
         box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
         backdrop-filter: blur(15px); 
         overflow: hidden;
+        width: 100%;
+        max-width: 750px; /* Ancho máximo para que no se estire demasiado */
     }
 
-    /* GRID AJUSTADO: Se redujo el espacio del nombre (de 2fr a 250px) para acercar los datos */
+    /* GRID COMPACTO */
     .grid-posiciones { 
         display: grid; 
-        grid-template-columns: 250px repeat(8, 45px); 
+        grid-template-columns: 200px repeat(8, 45px); /* Reducido nombre a 200px */
         align-items: center; 
+        justify-content: center; /* Centra el contenido dentro de la card */
         padding: 12px 20px; 
     }
     
@@ -142,7 +153,6 @@ st.markdown("""
 
     .team-row {
         border-bottom: 1px solid rgba(125, 177, 255, 0.15);
-        transition: background 0.3s;
     }
 
     .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
@@ -221,6 +231,9 @@ if not st.session_state.get('logged_in', False):
         stats_data = calcular_tablas()
         grupos_activos = sorted(list(set(eq['grupo'] for eq in stats_data.values() if eq['grupo'] != "SIN GRUPO")))
         if not grupos_activos: st.info("No hay equipos asignados a grupos.")
+        
+        # Envolvemos las tablas en un contenedor flex para centrarlas
+        st.markdown('<div class="table-container">', unsafe_allow_html=True)
         for g in grupos_activos:
             eq_g = sorted([s for s in stats_data.values() if s['grupo'] == g], key=lambda x: (x['PTS'], x['DG'], x['GF']), reverse=True)
             html = f'''
@@ -245,6 +258,7 @@ if not st.session_state.get('logged_in', False):
                     <span class="stat-cell">{eq["DG"]}</span><span class="pts-cell">{eq["PTS"]}</span>
                 </div>'''
             st.markdown(html + '</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with t_ff:
         ff = st.session_state.fase_final
@@ -270,6 +284,7 @@ if not st.session_state.get('logged_in', False):
             l_map = {i['nombre']: i['logo'] for i in st.session_state.equipos.values()}
             for f in sorted(df['fecha'].unique(), reverse=True):
                 st.markdown(f'<div class="date-divider">{f}</div>', unsafe_allow_html=True)
+                st.markdown('<div class="table-container">', unsafe_allow_html=True)
                 html_res = '<div class="main-card">'
                 for _, p in df[df['fecha'] == f].iterrows():
                     s_l = f"data:image/png;base64,{img_to_base64(l_map.get(p['local']))}" if l_map.get(p['local']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
@@ -278,14 +293,17 @@ if not st.session_state.get('logged_in', False):
                     sep = "-" if (res_l != "" or res_v != "") else "VS"
                     html_res += f'<div style="display:flex;align-items:center;justify-content:center;padding:15px;border-bottom:1px solid #ffffff11;"><div style="flex:1;text-align:right;">{p["local"]} <img src="{s_l}" width="24"></div><div style="width:120px;text-align:center;color:#FFD700;font-weight:900;font-size:1.3em;">{res_l} {sep} {res_v}</div><div style="flex:1;text-align:left;"><img src="{s_v}" width="24"> {p["visitante"]}</div></div>'
                 st.markdown(html_res + '</div>', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
     with t_gol:
         if st.session_state.goleadores:
             gols = sorted(st.session_state.goleadores, key=lambda x: int(x.get('goles', 0)), reverse=True)
+            st.markdown('<div class="table-container">', unsafe_allow_html=True)
             html_gol = '<div class="main-card"><div class="grid-goleadores header-grid"><span class="txt-gold">JUGADOR</span><span class="txt-white">EQUIPO</span><span class="stat-cell">GOLES</span></div>'
             for g in gols:
                 html_gol += f'<div class="grid-goleadores" style="border-bottom:1px solid #ffffff10; padding: 10px 15px;"><span>{g["nombre"]}</span><span style="color:#7db1ff;">{g["equipo"]}</span><span class="stat-cell">{g["goles"]}</span></div>'
             st.markdown(html_gol + '</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 6. PANEL ADMINISTRADOR ---
 with st.sidebar:
@@ -352,10 +370,10 @@ with st.sidebar:
                             mff["gl"] = st.number_input(f"gl{ft}{iff}", value=int(float(mff["gl"])) if mff["gl"] is not None else 0)
                             mff["gv"] = st.number_input(f"gv{ft}{iff}", value=int(float(mff["gv"])) if mff["gv"] is not None else 0)
                     else:
-                        matches_ff["L"] = st.selectbox("L Final", eqs_ko, index=eqs_ko.index(matches_ff["L"]) if matches_ff["L"] in eqs_ko else 0)
-                        matches_ff["V"] = st.selectbox("V Final", eqs_ko, index=eqs_ko.index(matches_ff["V"]) if matches_ff["V"] in eqs_ko else 0)
-                        matches_ff["gl"] = st.number_input("gl Final", value=int(float(matches_ff["gl"])) if matches_ff["gl"] is not None else 0)
-                        matches_ff["gv"] = st.number_input("gv Final", value=int(float(matches_ff["gv"])) if matches_ff["gv"] is not None else 0)
+                        matches_ff["L"] = st.selectbox(f"L {ft}", eqs_ko, index=eqs_ko.index(matches_ff["L"]) if matches_ff["L"] in eqs_ko else 0)
+                        matches_ff["V"] = st.selectbox(f"V {ft}", eqs_ko, index=eqs_ko.index(matches_ff["V"]) if matches_ff["V"] in eqs_ko else 0)
+                        matches_ff["gl"] = st.number_input(f"gl {ft}", value=int(float(matches_ff["gl"])) if matches_ff["gl"] is not None else 0)
+                        matches_ff["gv"] = st.number_input(f"gv {ft}", value=int(float(matches_ff["gv"])) if matches_ff["gv"] is not None else 0)
             if st.button("Guardar FF"): save_to_disk(); st.rerun()
 
         with adm_t[4]:
