@@ -307,8 +307,7 @@ if not st.session_state.get('logged_in', False):
                     sep = "-" if (res_l != "" or res_v != "") else "VS"
                     
                     html_res += f'''
-                    <div style="display:flex; align-items:center; justify-content:center; padding:15px 25px; border-bottom:1px solid #ffffff11; gap:15px;">
-                        <div class="res-team-container" style="flex:1; justify-content:flex-end;">
+                            <div style="display:flex; align-items:center; justify-content:center; padding:15px 50px; border-bottom:1px solid #ffffff11; gap:15px;">                        <div class="res-team-container" style="flex:1; justify-content:flex-end;">
                             <span style="font-weight:700;">{p["local"]}</span>
                             <img src="{s_l}" width="24">
                         </div>
