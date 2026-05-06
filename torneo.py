@@ -110,25 +110,26 @@ st.markdown("""
     }
 
     .main-card { 
-        background: rgba(0, 10, 60, 0.4); 
-        border-radius: 12px; 
-        margin-bottom: 30px; 
-        border: 1px solid #FFD70033; 
-        color: white; 
-        box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
-        backdrop-filter: blur(15px); 
-        overflow: hidden;
-        width: 100%;
-        max-width: 800px;
-    }
+            background: rgba(0, 10, 60, 0.4); 
+            border-radius: 12px; 
+            margin-bottom: 30px; 
+            border: 1px solid #FFD70033; 
+            color: white; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+            backdrop-filter: blur(15px); 
+            overflow: hidden;
+            width: fit-content; /* CAMBIO: Se ajusta al contenido */
+            margin-left: auto;   /* Estos dos centran la tabla */
+            margin-right: auto;
+        }
 
     /* AJUSTE DE ESPACIOS: Se acortó el margen izquierdo y se forzó una sola línea */
     .grid-posiciones { 
-        display: grid; 
-        grid-template-columns: 280px repeat(8, 45px); 
-        align-items: center; 
-        padding: 10px 12px; /* Reducción de padding lateral */
-    }
+            display: grid; 
+            grid-template-columns: 240px repeat(8, 42px); /* Ajustado para que el borde derecho toque los puntos */
+            align-items: center; 
+            padding: 10px 12px; 
+        }
     
     .header-grid { 
         background: rgba(0, 0, 0, 0.3);
