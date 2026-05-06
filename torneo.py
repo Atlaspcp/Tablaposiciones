@@ -76,7 +76,7 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS ACTUALIZADOS ---
+# --- 2. ESTILOS CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
@@ -110,26 +110,25 @@ st.markdown("""
     }
 
     .main-card { 
-            background: rgba(0, 10, 60, 0.4); 
-            border-radius: 12px; 
-            margin-bottom: 30px; 
-            border: 1px solid #FFD70033; 
-            color: white; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
-            backdrop-filter: blur(15px); 
-            overflow: hidden;
-            width: fit-content; /* CAMBIO: Se ajusta al contenido */
-            margin-left: auto;   /* Estos dos centran la tabla */
-            margin-right: auto;
-        }
+        background: rgba(0, 10, 60, 0.4); 
+        border-radius: 12px; 
+        margin-bottom: 30px; 
+        border: 1px solid #FFD70033; 
+        color: white; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+        backdrop-filter: blur(15px); 
+        overflow: hidden;
+        width: fit-content; 
+        margin-left: auto;
+        margin-right: auto;
+    }
 
-    /* AJUSTE DE ESPACIOS: Se acortó el margen izquierdo y se forzó una sola línea */
     .grid-posiciones { 
-            display: grid; 
-            grid-template-columns: 240px repeat(8, 42px); /* Ajustado para que el borde derecho toque los puntos */
-            align-items: center; 
-            padding: 10px 12px; 
-        }
+        display: grid; 
+        grid-template-columns: 240px repeat(8, 42px); 
+        align-items: center; 
+        padding: 10px 12px; 
+    }
     
     .header-grid { 
         background: rgba(0, 0, 0, 0.3);
@@ -142,10 +141,18 @@ st.markdown("""
     .team-name-cell {
         display: flex;
         align-items: center;
-        white-space: nowrap; /* Evita que el nombre salte de línea */
+        white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis; /* Si el nombre es demasiado largo, pone ... */
-        gap: 8px; /* Espacio corto entre logo y texto */
+        text-overflow: ellipsis;
+        gap: 8px;
+    }
+
+    /* Estilos específicos para la sección de resultados */
+    .res-team-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
     }
 
     .group-label { color: #FFD700; font-size: 1.3em; font-weight: 900; }
@@ -292,13 +299,27 @@ if not st.session_state.get('logged_in', False):
             for f in sorted(df['fecha'].unique(), reverse=True):
                 st.markdown(f'<div class="date-divider">{f}</div>', unsafe_allow_html=True)
                 st.markdown('<div class="table-container">', unsafe_allow_html=True)
-                html_res = '<div class="main-card">'
+                html_res = '<div class="main-card" style="min-width: 520px;">'
                 for _, p in df[df['fecha'] == f].iterrows():
                     s_l = f"data:image/png;base64,{img_to_base64(l_map.get(p['local']))}" if l_map.get(p['local']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
                     s_v = f"data:image/png;base64,{img_to_base64(l_map.get(p['visitante']))}" if l_map.get(p['visitante']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
                     res_l, res_v = format_score(p["goles_l"]), format_score(p["goles_v"])
                     sep = "-" if (res_l != "" or res_v != "") else "VS"
-                    html_res += f'<div style="display:flex;align-items:center;justify-content:center;padding:15px;border-bottom:1px solid #ffffff11;"><div style="flex:1;text-align:right;">{p["local"]} <img src="{s_l}" width="24"></div><div style="width:120px;text-align:center;color:#FFD700;font-weight:900;font-size:1.3em;">{res_l} {sep} {res_v}</div><div style="flex:1;text-align:left;"><img src="{s_v}" width="24"> {p["visitante"]}</div></div>'
+                    
+                    html_res += f'''
+                    <div style="display:flex; align-items:center; justify-content:center; padding:15px 25px; border-bottom:1px solid #ffffff11; gap:15px;">
+                        <div class="res-team-container" style="flex:1; justify-content:flex-end;">
+                            <span style="font-weight:700;">{p["local"]}</span>
+                            <img src="{s_l}" width="24">
+                        </div>
+                        <div style="width:80px; text-align:center; color:#FFD700; font-weight:900; font-size:1.3em;">
+                            {res_l} {sep} {res_v}
+                        </div>
+                        <div class="res-team-container" style="flex:1; justify-content:flex-start;">
+                            <img src="{s_v}" width="24">
+                            <span style="font-weight:700;">{p["visitante"]}</span>
+                        </div>
+                    </div>'''
                 st.markdown(html_res + '</div>', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
