@@ -76,7 +76,7 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS ---
+# --- 2. ESTILOS CSS ACTUALIZADOS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
@@ -102,7 +102,6 @@ st.markdown("""
         margin-bottom: 20px; 
     }
 
-    /* Centrado de la tabla y limitación de ancho */
     .table-container {
         display: flex;
         flex-direction: column;
@@ -120,16 +119,15 @@ st.markdown("""
         backdrop-filter: blur(15px); 
         overflow: hidden;
         width: 100%;
-        max-width: 750px; /* Ancho máximo para que no se estire demasiado */
+        max-width: 800px;
     }
 
-    /* GRID COMPACTO */
+    /* AJUSTE DE ESPACIOS: Se acortó el margen izquierdo y se forzó una sola línea */
     .grid-posiciones { 
         display: grid; 
-        grid-template-columns: 200px repeat(8, 45px); /* Reducido nombre a 200px */
+        grid-template-columns: 280px repeat(8, 45px); 
         align-items: center; 
-        justify-content: center; /* Centra el contenido dentro de la card */
-        padding: 12px 20px; 
+        padding: 10px 12px; /* Reducción de padding lateral */
     }
     
     .header-grid { 
@@ -140,7 +138,16 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    .group-label { color: #FFD700; font-size: 1.4em; font-weight: 900; }
+    .team-name-cell {
+        display: flex;
+        align-items: center;
+        white-space: nowrap; /* Evita que el nombre salte de línea */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Si el nombre es demasiado largo, pone ... */
+        gap: 8px; /* Espacio corto entre logo y texto */
+    }
+
+    .group-label { color: #FFD700; font-size: 1.3em; font-weight: 900; }
     .stat-cell { text-align: center; font-weight: bold; color: #ffffff !important; }
     
     .pts-cell { 
@@ -232,7 +239,6 @@ if not st.session_state.get('logged_in', False):
         grupos_activos = sorted(list(set(eq['grupo'] for eq in stats_data.values() if eq['grupo'] != "SIN GRUPO")))
         if not grupos_activos: st.info("No hay equipos asignados a grupos.")
         
-        # Envolvemos las tablas en un contenedor flex para centrarlas
         st.markdown('<div class="table-container">', unsafe_allow_html=True)
         for g in grupos_activos:
             eq_g = sorted([s for s in stats_data.values() if s['grupo'] == g], key=lambda x: (x['PTS'], x['DG'], x['GF']), reverse=True)
@@ -248,8 +254,8 @@ if not st.session_state.get('logged_in', False):
                 img = f"data:image/png;base64,{img_to_base64(eq['logo'])}" if eq['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
                 html += f'''
                 <div class="grid-posiciones team-row">
-                    <div style="display:flex;align-items:center;">
-                        <img src="{img}" style="width:24px;margin-right:12px;">
+                    <div class="team-name-cell">
+                        <img src="{img}" style="width:24px;">
                         <span style="font-weight:700;">{eq["nombre"]}</span>
                     </div>
                     <span class="stat-cell">{eq["PJ"]}</span><span class="stat-cell">{eq["G"]}</span>
