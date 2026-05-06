@@ -65,7 +65,6 @@ def load_from_disk():
                     st.session_state.logo_torneo = Image.open(io.BytesIO(base64.b64decode(data["logo_torneo"])))
                 if data.get("logo_final"):
                     st.session_state.logo_final = Image.open(io.BytesIO(base64.b64decode(data["logo_final"])))
-                
                 eq_cargados = {}
                 for id_eq, info in data.get("equipos", {}).items():
                     logo_pil = None
@@ -77,7 +76,7 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS (OPCIÓN CLÁSICA Y ELEGANTE) ---
+# --- 2. ESTILOS CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
@@ -86,7 +85,6 @@ st.markdown("""
         background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important; 
     }
     
-    /* Colores base */
     .txt-celeste { color: #7db1ff !important; }
     .txt-red { color: #ff3b3b !important; }
     .txt-gold { color: #FFD700 !important; }
@@ -104,7 +102,6 @@ st.markdown("""
         margin-bottom: 20px; 
     }
 
-    /* Contenedor Principal Tablas */
     .main-card { 
         background: rgba(0, 10, 60, 0.4); 
         border-radius: 12px; 
@@ -116,12 +113,11 @@ st.markdown("""
         overflow: hidden;
     }
 
-    /* Grid de Posiciones Estilo Clásico */
+    /* GRID AJUSTADO: Se redujo el espacio del nombre (de 2fr a 250px) para acercar los datos */
     .grid-posiciones { 
         display: grid; 
-        grid-template-columns: 2fr repeat(8, 45px); 
+        grid-template-columns: 250px repeat(8, 45px); 
         align-items: center; 
-        min-width: 650px; 
         padding: 12px 20px; 
     }
     
@@ -133,12 +129,7 @@ st.markdown("""
         letter-spacing: 1px;
     }
 
-    .group-label {
-        color: #FFD700;
-        font-size: 1.4em;
-        font-weight: 900;
-    }
-
+    .group-label { color: #FFD700; font-size: 1.4em; font-weight: 900; }
     .stat-cell { text-align: center; font-weight: bold; color: #ffffff !important; }
     
     .pts-cell { 
@@ -153,18 +144,13 @@ st.markdown("""
         border-bottom: 1px solid rgba(125, 177, 255, 0.15);
         transition: background 0.3s;
     }
-    .team-row:hover {
-        background: rgba(125, 177, 255, 0.05);
-    }
 
-    /* Estilos Fase Final */
     .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; min-width: 1050px; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 550px; width: 240px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; margin: 15px 0; }
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 28px; text-align: center; border-radius: 3px; }
     
-    /* Efecto Épico Logo Final */
     .final-center { width: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
     .logo-epico { filter: drop-shadow(0 0 20px #FFD700); margin-bottom: 10px; }
 
@@ -187,8 +173,7 @@ def render_match(match):
     t1, t2 = get_team_info(match["L"]), get_team_info(match["V"])
     img1 = f"data:image/png;base64,{img_to_base64(t1['logo'])}" if t1['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
     img2 = f"data:image/png;base64,{img_to_base64(t2['logo'])}" if t2['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-    gl_disp = format_score(match["gl"])
-    gv_disp = format_score(match["gv"])
+    gl_disp, gv_disp = format_score(match["gl"]), format_score(match["gv"])
     return f'''
     <div class="match-box-ko">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -238,8 +223,6 @@ if not st.session_state.get('logged_in', False):
         if not grupos_activos: st.info("No hay equipos asignados a grupos.")
         for g in grupos_activos:
             eq_g = sorted([s for s in stats_data.values() if s['grupo'] == g], key=lambda x: (x['PTS'], x['DG'], x['GF']), reverse=True)
-            
-            # Encabezado elegante con Dorado
             html = f'''
             <div class="main-card">
                 <div class="grid-posiciones header-grid">
@@ -248,23 +231,18 @@ if not st.session_state.get('logged_in', False):
                     <span class="stat-cell">P</span><span class="stat-cell">GF</span><span class="stat-cell">GC</span>
                     <span class="stat-cell">DG</span><span class="stat-cell">PTS</span>
                 </div>'''
-            
             for eq in eq_g:
                 img = f"data:image/png;base64,{img_to_base64(eq['logo'])}" if eq['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
                 html += f'''
                 <div class="grid-posiciones team-row">
                     <div style="display:flex;align-items:center;">
-                        <img src="{img}" style="width:24px;margin-right:12px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                        <img src="{img}" style="width:24px;margin-right:12px;">
                         <span style="font-weight:700;">{eq["nombre"]}</span>
                     </div>
-                    <span class="stat-cell">{eq["PJ"]}</span>
-                    <span class="stat-cell">{eq["G"]}</span>
-                    <span class="stat-cell">{eq["E"]}</span>
-                    <span class="stat-cell">{eq["P"]}</span>
-                    <span class="stat-cell">{eq["GF"]}</span>
-                    <span class="stat-cell">{eq["GC"]}</span>
-                    <span class="stat-cell">{eq["DG"]}</span>
-                    <span class="pts-cell">{eq["PTS"]}</span>
+                    <span class="stat-cell">{eq["PJ"]}</span><span class="stat-cell">{eq["G"]}</span>
+                    <span class="stat-cell">{eq["E"]}</span><span class="stat-cell">{eq["P"]}</span>
+                    <span class="stat-cell">{eq["GF"]}</span><span class="stat-cell">{eq["GC"]}</span>
+                    <span class="stat-cell">{eq["DG"]}</span><span class="pts-cell">{eq["PTS"]}</span>
                 </div>'''
             st.markdown(html + '</div>', unsafe_allow_html=True)
 
@@ -328,7 +306,7 @@ with st.sidebar:
         
         with adm_t[1]:
             st.subheader("Equipos y Grupos")
-            posibles_grupos = ["SIN GRUPO", "A", "B", "C", "D", "E", "F"]
+            posibles_grupos = ["SIN GRUPO", "A", "B", "C", "D", "E"]
             for id_e, inf in st.session_state.equipos.items():
                 with st.expander(f"{inf['nombre']} ({inf['grupo']})"):
                     nn = st.text_input("Nombre", inf['nombre'], key=f"n{id_e}").upper()
@@ -374,10 +352,10 @@ with st.sidebar:
                             mff["gl"] = st.number_input(f"gl{ft}{iff}", value=int(float(mff["gl"])) if mff["gl"] is not None else 0)
                             mff["gv"] = st.number_input(f"gv{ft}{iff}", value=int(float(mff["gv"])) if mff["gv"] is not None else 0)
                     else:
-                        matches_ff["L"] = st.selectbox(f"L {ft}", eqs_ko, index=eqs_ko.index(matches_ff["L"]) if matches_ff["L"] in eqs_ko else 0)
-                        matches_ff["V"] = st.selectbox(f"V {ft}", eqs_ko, index=eqs_ko.index(matches_ff["V"]) if matches_ff["V"] in eqs_ko else 0)
-                        matches_ff["gl"] = st.number_input(f"gl {ft}", value=int(float(matches_ff["gl"])) if matches_ff["gl"] is not None else 0)
-                        matches_ff["gv"] = st.number_input(f"gv {ft}", value=int(float(matches_ff["gv"])) if matches_ff["gv"] is not None else 0)
+                        matches_ff["L"] = st.selectbox("L Final", eqs_ko, index=eqs_ko.index(matches_ff["L"]) if matches_ff["L"] in eqs_ko else 0)
+                        matches_ff["V"] = st.selectbox("V Final", eqs_ko, index=eqs_ko.index(matches_ff["V"]) if matches_ff["V"] in eqs_ko else 0)
+                        matches_ff["gl"] = st.number_input("gl Final", value=int(float(matches_ff["gl"])) if matches_ff["gl"] is not None else 0)
+                        matches_ff["gv"] = st.number_input("gv Final", value=int(float(matches_ff["gv"])) if matches_ff["gv"] is not None else 0)
             if st.button("Guardar FF"): save_to_disk(); st.rerun()
 
         with adm_t[4]:
