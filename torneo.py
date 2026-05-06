@@ -77,26 +77,97 @@ def load_from_disk():
         except: return False
     return False
 
-# --- 2. ESTILOS CSS ---
+# --- 2. ESTILOS CSS (OPCIÓN CLÁSICA Y ELEGANTE) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
-    [data-testid="stAppViewContainer"] { background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important; }
+    
+    [data-testid="stAppViewContainer"] { 
+        background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important; 
+    }
+    
+    /* Colores base */
     .txt-celeste { color: #7db1ff !important; }
     .txt-red { color: #ff3b3b !important; }
     .txt-gold { color: #FFD700 !important; }
+    .txt-white { color: #ffffff !important; }
+
     h1, h2, h3, .stTabs [data-baseweb="tab"] p { color: white !important; font-weight: 900; }
-    .nam-title { font-size: clamp(2.5em, 8vw, 4.5em); text-align: center; font-weight: 900; letter-spacing: -2px; line-height: 1; color: white; margin-bottom: 20px; }
-    .main-card { background: rgba(0, 10, 60, 0.6); border-radius: 12px; margin-bottom: 25px; border: 1px solid #FFD70033; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); overflow-x: auto; }
-    .grid-posiciones { display: grid; grid-template-columns: 2fr repeat(8, 45px); align-items: center; min-width: 650px; padding: 10px 15px; }
-    .header-grid { background: linear-gradient(90deg, #00124d 0%, #ff3b3b33 100%); border-bottom: 3px solid #FFD700; font-weight: 900; }
-    .stat-cell { text-align: center; font-weight: bold; color: white !important; }
-    .grid-goleadores { display: grid; grid-template-columns: 2fr 1.5fr 1fr; align-items: center; min-width: 500px; padding: 10px 15px; }
+    
+    .nam-title { 
+        font-size: clamp(2.5em, 8vw, 4.5em); 
+        text-align: center; 
+        font-weight: 900; 
+        letter-spacing: -2px; 
+        line-height: 1; 
+        color: white; 
+        margin-bottom: 20px; 
+    }
+
+    /* Contenedor Principal Tablas */
+    .main-card { 
+        background: rgba(0, 10, 60, 0.4); 
+        border-radius: 12px; 
+        margin-bottom: 30px; 
+        border: 1px solid #FFD70033; 
+        color: white; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+        backdrop-filter: blur(15px); 
+        overflow: hidden;
+    }
+
+    /* Grid de Posiciones Estilo Clásico */
+    .grid-posiciones { 
+        display: grid; 
+        grid-template-columns: 2fr repeat(8, 45px); 
+        align-items: center; 
+        min-width: 650px; 
+        padding: 12px 20px; 
+    }
+    
+    .header-grid { 
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 2px solid #FFD700; 
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .group-label {
+        color: #FFD700;
+        font-size: 1.4em;
+        font-weight: 900;
+    }
+
+    .stat-cell { text-align: center; font-weight: bold; color: #ffffff !important; }
+    
+    .pts-cell { 
+        text-align: center; 
+        font-weight: 900; 
+        color: #FFD700 !important; 
+        background: rgba(255, 215, 0, 0.1);
+        border-radius: 4px;
+    }
+
+    .team-row {
+        border-bottom: 1px solid rgba(125, 177, 255, 0.15);
+        transition: background 0.3s;
+    }
+    .team-row:hover {
+        background: rgba(125, 177, 255, 0.05);
+    }
+
+    /* Estilos Fase Final */
     .bracket-scroll { overflow-x: auto; width: 100%; padding: 20px 0; }
     .bracket-wrapper { display: flex; justify-content: space-between; align-items: center; min-width: 1050px; padding: 20px 0; }
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 550px; width: 240px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; margin: 15px 0; }
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 28px; text-align: center; border-radius: 3px; }
+    
+    /* Efecto Épico Logo Final */
+    .final-center { width: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .logo-epico { filter: drop-shadow(0 0 20px #FFD700); margin-bottom: 10px; }
+
     .date-divider { background: #FFD700; color: black; padding: 5px 20px; font-weight: 900; border-radius: 4px; margin: 25px 0 10px 0; display: inline-block; }
 </style>
 """, unsafe_allow_html=True)
@@ -118,7 +189,17 @@ def render_match(match):
     img2 = f"data:image/png;base64,{img_to_base64(t2['logo'])}" if t2['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
     gl_disp = format_score(match["gl"])
     gv_disp = format_score(match["gv"])
-    return f'<div class="match-box-ko"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="display:flex;align-items:center;"><img src="{img1}" style="width:22px;margin-right:8px;"><span style="font-size:0.8em;font-weight:700;">{t1["nombre"] or "---"}</span></div><span class="ko-score">{gl_disp}</span></div><div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;"><img src="{img2}" style="width:22px;margin-right:8px;"><span style="font-size:0.8em;font-weight:700;">{t2["nombre"] or "---"}</span></div><span class="ko-score">{gv_disp}</span></div></div>'
+    return f'''
+    <div class="match-box-ko">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;"><img src="{img1}" style="width:22px;margin-right:8px;"><span style="font-size:0.8em;font-weight:700;">{t1["nombre"] or "---"}</span></div>
+            <span class="ko-score">{gl_disp}</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;"><img src="{img2}" style="width:22px;margin-right:8px;"><span style="font-size:0.8em;font-weight:700;">{t2["nombre"] or "---"}</span></div>
+            <span class="ko-score">{gv_disp}</span>
+        </div>
+    </div>'''
 
 def calcular_tablas():
     stats = {info['nombre']: {"nombre": info['nombre'], "PJ": 0, "G": 0, "E": 0, "P": 0, "GF": 0, "GC": 0, "DG": 0, "PTS": 0, "grupo": info['grupo'], "logo": info['logo']} for info in st.session_state.equipos.values() if info['grupo'] != "SIN GRUPO"}
@@ -143,8 +224,7 @@ if 'equipos' not in st.session_state:
     st.session_state.logo_torneo = st.session_state.logo_final = None
     if not load_from_disk():
         st.session_state.equipos = {f"ID_{i}": {"nombre": f"EQUIPO {i}", "grupo": "SIN GRUPO", "logo": None} for i in range(1, 21)}
-        st.session_state.partidos, st.session_state.goleadores = [], []
-        st.session_state.fase_final = inicializar_fase_final()
+        st.session_state.partidos, st.session_state.goleadores, st.session_state.fase_final = [], [], inicializar_fase_final()
 
 # --- 5. INTERFAZ PÚBLICA ---
 st.markdown('<h1 class="nam-title">#<span class="txt-celeste">N</span><span class="txt-red">A</span>MLEAGUE2026</h1>', unsafe_allow_html=True)
@@ -154,22 +234,57 @@ if not st.session_state.get('logged_in', False):
     
     with t_pos:
         stats_data = calcular_tablas()
-        # Solo mostrar grupos que tengan equipos asignados y que no sean "SIN GRUPO"
         grupos_activos = sorted(list(set(eq['grupo'] for eq in stats_data.values() if eq['grupo'] != "SIN GRUPO")))
-        if not grupos_activos:
-            st.info("No hay equipos asignados a grupos todavía.")
+        if not grupos_activos: st.info("No hay equipos asignados a grupos.")
         for g in grupos_activos:
             eq_g = sorted([s for s in stats_data.values() if s['grupo'] == g], key=lambda x: (x['PTS'], x['DG'], x['GF']), reverse=True)
-            html = f'<div class="main-card"><div class="grid-posiciones header-grid"><span>GRUPO {g}</span><span class="stat-cell">PJ</span><span class="stat-cell">G</span><span class="stat-cell">E</span><span class="stat-cell">P</span><span class="stat-cell">GF</span><span class="stat-cell">GC</span><span class="stat-cell">DG</span><span class="stat-cell">PTS</span></div>'
+            
+            # Encabezado elegante con Dorado
+            html = f'''
+            <div class="main-card">
+                <div class="grid-posiciones header-grid">
+                    <span class="group-label">GRUPO {g}</span>
+                    <span class="stat-cell">PJ</span><span class="stat-cell">G</span><span class="stat-cell">E</span>
+                    <span class="stat-cell">P</span><span class="stat-cell">GF</span><span class="stat-cell">GC</span>
+                    <span class="stat-cell">DG</span><span class="stat-cell">PTS</span>
+                </div>'''
+            
             for eq in eq_g:
                 img = f"data:image/png;base64,{img_to_base64(eq['logo'])}" if eq['logo'] else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
-                html += f'<div class="grid-posiciones" style="border-bottom:1px solid #ffffff10;"><div style="display:flex;align-items:center;"><img src="{img}" style="width:24px;margin-right:12px;">{eq["nombre"]}</div><span class="stat-cell">{eq["PJ"]}</span><span class="stat-cell">{eq["G"]}</span><span class="stat-cell">{eq["E"]}</span><span class="stat-cell">{eq["P"]}</span><span class="stat-cell">{eq["GF"]}</span><span class="stat-cell">{eq["GC"]}</span><span class="stat-cell">{eq["DG"]}</span><span class="stat-cell" style="color:#FFD700 !important">{eq["PTS"]}</span></div>'
+                html += f'''
+                <div class="grid-posiciones team-row">
+                    <div style="display:flex;align-items:center;">
+                        <img src="{img}" style="width:24px;margin-right:12px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                        <span style="font-weight:700;">{eq["nombre"]}</span>
+                    </div>
+                    <span class="stat-cell">{eq["PJ"]}</span>
+                    <span class="stat-cell">{eq["G"]}</span>
+                    <span class="stat-cell">{eq["E"]}</span>
+                    <span class="stat-cell">{eq["P"]}</span>
+                    <span class="stat-cell">{eq["GF"]}</span>
+                    <span class="stat-cell">{eq["GC"]}</span>
+                    <span class="stat-cell">{eq["DG"]}</span>
+                    <span class="pts-cell">{eq["PTS"]}</span>
+                </div>'''
             st.markdown(html + '</div>', unsafe_allow_html=True)
 
     with t_ff:
         ff = st.session_state.fase_final
         logo_f = f"data:image/png;base64,{img_to_base64(st.session_state.logo_final)}" if st.session_state.logo_final else None
-        st.markdown(f'''<div class="bracket-scroll"><div class="bracket-wrapper"><div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}</div><div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][0])}</div><div class="final-center">{"<img src='"+logo_f+"' width=160>" if logo_f else "<h2>FINAL</h2>"}<h1 style="color:white !important;margin:15px 0;">GRAN FINAL</h1>{render_match(ff["final"])}</div><div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][1])}</div><div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}</div></div></div>''', unsafe_allow_html=True)
+        st.markdown(f'''
+        <div class="bracket-scroll">
+            <div class="bracket-wrapper">
+                <div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][0])}{render_match(ff["cuartos"][1])}</div>
+                <div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][0])}</div>
+                <div class="final-center">
+                    {"<img src='"+logo_f+"' class='logo-epico' width=180>" if logo_f else "<h2 class='txt-gold'>FINAL</h2>"}
+                    <h1 style="color:white !important; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5);">GRAN FINAL</h1>
+                    {render_match(ff["final"])}
+                </div>
+                <div class="bracket-column"><h4>SEMIFINAL</h4>{render_match(ff["semis"][1])}</div>
+                <div class="bracket-column"><h4>CUARTOS</h4>{render_match(ff["cuartos"][2])}{render_match(ff["cuartos"][3])}</div>
+            </div>
+        </div>''', unsafe_allow_html=True)
 
     with t_res:
         if st.session_state.partidos:
@@ -189,9 +304,9 @@ if not st.session_state.get('logged_in', False):
     with t_gol:
         if st.session_state.goleadores:
             gols = sorted(st.session_state.goleadores, key=lambda x: int(x.get('goles', 0)), reverse=True)
-            html_gol = '<div class="main-card"><div class="grid-goleadores header-grid"><span>JUGADOR</span><span>EQUIPO</span><span class="stat-cell">GOLES</span></div>'
+            html_gol = '<div class="main-card"><div class="grid-goleadores header-grid"><span class="txt-gold">JUGADOR</span><span class="txt-white">EQUIPO</span><span class="stat-cell">GOLES</span></div>'
             for g in gols:
-                html_gol += f'<div class="grid-goleadores" style="border-bottom:1px solid #ffffff10;"><span>{g["nombre"]}</span><span style="color:#FFD700;">{g["equipo"]}</span><span class="stat-cell">{g["goles"]}</span></div>'
+                html_gol += f'<div class="grid-goleadores" style="border-bottom:1px solid #ffffff10; padding: 10px 15px;"><span>{g["nombre"]}</span><span style="color:#7db1ff;">{g["equipo"]}</span><span class="stat-cell">{g["goles"]}</span></div>'
             st.markdown(html_gol + '</div>', unsafe_allow_html=True)
 
 # --- 6. PANEL ADMINISTRADOR ---
@@ -212,16 +327,15 @@ with st.sidebar:
                 save_to_disk(); st.rerun()
         
         with adm_t[1]:
-            st.subheader("Editar Equipos y Grupos")
-            posibles_grupos = ["SIN GRUPO", "A", "B", "C", "D", "E"]
+            st.subheader("Equipos y Grupos")
+            posibles_grupos = ["SIN GRUPO", "A", "B", "C", "D", "E", "F"]
             for id_e, inf in st.session_state.equipos.items():
                 with st.expander(f"{inf['nombre']} ({inf['grupo']})"):
                     nn = st.text_input("Nombre", inf['nombre'], key=f"n{id_e}").upper()
-                    ng = st.selectbox("Asignar a Grupo", posibles_grupos, index=posibles_grupos.index(inf['grupo']) if inf['grupo'] in posibles_grupos else 0, key=f"g{id_e}")
+                    ng = st.selectbox("Grupo", posibles_grupos, index=posibles_grupos.index(inf['grupo']) if inf['grupo'] in posibles_grupos else 0, key=f"g{id_e}")
                     nl = st.file_uploader("Logo", key=f"l{id_e}")
-                    if st.button("Guardar Cambios", key=f"b{id_e}"):
-                        st.session_state.equipos[id_e]['nombre'] = nn
-                        st.session_state.equipos[id_e]['grupo'] = ng
+                    if st.button("Guardar", key=f"b{id_e}"):
+                        st.session_state.equipos[id_e].update({"nombre": nn, "grupo": ng})
                         if nl: st.session_state.equipos[id_e]['logo'] = Image.open(nl)
                         save_to_disk(); st.rerun()
 
@@ -230,7 +344,7 @@ with st.sidebar:
             eqs_lista = sorted([i['nombre'] for i in st.session_state.equipos.values()])
             f_p = st.date_input("Fecha")
             l_sel, v_sel = st.selectbox("Local", eqs_lista), st.selectbox("Visitante", eqs_lista)
-            t_res_check = st.checkbox("¿Ya tiene resultado?")
+            t_res_check = st.checkbox("¿Tiene resultado?")
             gl_in, gv_in = (st.number_input("GL", 0, step=1), st.number_input("GV", 0, step=1)) if t_res_check else (None, None)
             if st.button("Registrar"):
                 st.session_state.partidos.append({"fecha": str(f_p), "local": l_sel, "visitante": v_sel, "goles_l": gl_in, "goles_v": gv_in})
@@ -242,34 +356,34 @@ with st.sidebar:
                     v_v = p['goles_v'] if (p['goles_v'] is not None and not (isinstance(p['goles_v'], float) and np.isnan(p['goles_v']))) else 0
                     ngl, ngv = st.number_input("GL", value=int(float(v_l)), key=f"egl{i}"), st.number_input("GV", value=int(float(v_v)), key=f"egv{i}")
                     c_upd, c_del = st.columns(2)
-                    if c_upd.button("💾 Guardar", key=f"upd{i}"):
-                        st.session_state.partidos[i]['goles_l'], st.session_state.partidos[i]['goles_v'] = int(ngl), int(ngv)
+                    if c_upd.button("💾", key=f"upd{i}"):
+                        st.session_state.partidos[i].update({'goles_l': int(ngl), 'goles_v': int(ngv)})
                         save_to_disk(); st.rerun()
-                    if c_del.button("🗑️ Borrar", key=f"delp{i}"):
+                    if c_del.button("🗑️", key=f"delp{i}"):
                         st.session_state.partidos.pop(i); save_to_disk(); st.rerun()
 
         with adm_t[3]:
             eqs_ko = [""] + eqs_lista
-            for f_tipo in ["cuartos", "semis", "final"]:
-                with st.expander(f_tipo.upper()):
-                    matches_ff = st.session_state.fase_final[f_tipo]
+            for ft in ["cuartos", "semis", "final"]:
+                with st.expander(ft.upper()):
+                    matches_ff = st.session_state.fase_final[ft]
                     if isinstance(matches_ff, list):
-                        for i_ff, m_ff in enumerate(matches_ff):
-                            m_ff["L"] = st.selectbox(f"L{f_tipo}{i_ff}", eqs_ko, index=eqs_ko.index(m_ff["L"]) if m_ff["L"] in eqs_ko else 0)
-                            m_ff["V"] = st.selectbox(f"V{f_tipo}{i_ff}", eqs_ko, index=eqs_ko.index(m_ff["V"]) if m_ff["V"] in eqs_ko else 0)
-                            m_ff["gl"] = st.number_input(f"gl{f_tipo}{i_ff}", value=int(float(m_ff["gl"])) if m_ff["gl"] is not None else 0)
-                            m_ff["gv"] = st.number_input(f"gv{f_tipo}{i_ff}", value=int(float(m_ff["gv"])) if m_ff["gv"] is not None else 0)
+                        for iff, mff in enumerate(matches_ff):
+                            mff["L"] = st.selectbox(f"L{ft}{iff}", eqs_ko, index=eqs_ko.index(mff["L"]) if mff["L"] in eqs_ko else 0)
+                            mff["V"] = st.selectbox(f"V{ft}{iff}", eqs_ko, index=eqs_ko.index(mff["V"]) if mff["V"] in eqs_ko else 0)
+                            mff["gl"] = st.number_input(f"gl{ft}{iff}", value=int(float(mff["gl"])) if mff["gl"] is not None else 0)
+                            mff["gv"] = st.number_input(f"gv{ft}{iff}", value=int(float(mff["gv"])) if mff["gv"] is not None else 0)
                     else:
-                        matches_ff["L"] = st.selectbox("L Final", eqs_ko, index=eqs_ko.index(matches_ff["L"]) if matches_ff["L"] in eqs_ko else 0)
-                        matches_ff["V"] = st.selectbox("V Final", eqs_ko, index=eqs_ko.index(matches_ff["V"]) if matches_ff["V"] in eqs_ko else 0)
-                        matches_ff["gl"] = st.number_input("gl Final", value=int(float(matches_ff["gl"])) if matches_ff["gl"] is not None else 0)
-                        matches_ff["gv"] = st.number_input("gv Final", value=int(float(matches_ff["gv"])) if matches_ff["gv"] is not None else 0)
+                        matches_ff["L"] = st.selectbox(f"L {ft}", eqs_ko, index=eqs_ko.index(matches_ff["L"]) if matches_ff["L"] in eqs_ko else 0)
+                        matches_ff["V"] = st.selectbox(f"V {ft}", eqs_ko, index=eqs_ko.index(matches_ff["V"]) if matches_ff["V"] in eqs_ko else 0)
+                        matches_ff["gl"] = st.number_input(f"gl {ft}", value=int(float(matches_ff["gl"])) if matches_ff["gl"] is not None else 0)
+                        matches_ff["gv"] = st.number_input(f"gv {ft}", value=int(float(matches_ff["gv"])) if matches_ff["gv"] is not None else 0)
             if st.button("Guardar FF"): save_to_disk(); st.rerun()
 
         with adm_t[4]:
             st.subheader("Goleadores")
             nj_in, ej_in, gj_in = st.text_input("Nombre").upper(), st.selectbox("Equipo", eqs_lista, key="gol_eq"), st.number_input("Goles Iniciales", 0, step=1)
-            if st.button("➕ Añadir"):
+            if st.button("➕"):
                 if nj_in: st.session_state.goleadores.append({"nombre": nj_in, "equipo": ej_in, "goles": int(gj_in)}); save_to_disk(); st.rerun()
             st.divider()
             for idx_g, g_data in enumerate(st.session_state.goleadores):
