@@ -125,7 +125,7 @@ st.markdown("""
 
     .grid-posiciones { 
         display: grid; 
-        grid-template-columns: 240px repeat(8, 42px); 
+        grid-template-columns: 300px repeat(8, 42px); 
         align-items: center; 
         padding: 10px 12px; 
     }
