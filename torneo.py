@@ -99,10 +99,15 @@ st.markdown("""
     @media (max-width: 768px) {
         .nam-title { font-size: 2.2em !important; }
         .main-card { width: 98% !important; min-width: 98% !important; }
-        /* Móvil: Logo(35px), Equipo(80px), Jugador(Libre), Goles(40px) */
-        .grid-goleadores { grid-template-columns: 35px 80px 1fr 40px !important; gap: 8px !important; padding: 10px !important; }
+        /* Móvil: Logo(35px), Equipo(90px), Jugador(Libre), Goles(55px) */
+        .grid-goleadores { 
+            grid-template-columns: 35px 90px 1fr 55px !important; 
+            gap: 5px !important; 
+            padding: 8px !important; 
+        }
         .grid-posiciones { grid-template-columns: 110px repeat(8, 30px) !important; font-size: 0.75em !important; overflow-x: auto; }
         .res-team-box { width: 110px !important; font-size: 0.85em !important; }
+        .top-scorer-name { font-size: 1.1em !important; }
     }
 
     .nam-title { font-size: 4em; text-align: center; font-weight: 900; color: white; margin-bottom: 20px; }
@@ -118,12 +123,12 @@ st.markdown("""
         gap: 15px; 
     }
     
-    /* Clase para permitir que el nombre del equipo salte de línea */
     .team-name-wrap {
         white-space: normal !important;
         line-height: 1.1;
         word-wrap: break-word;
         color: #7db1ff;
+        font-size: 0.9em;
     }
 
     .top-scorer-card { background: linear-gradient(90deg, rgba(255, 215, 0, 0.18) 0%, rgba(0, 20, 80, 0.6) 100%); border: 2px solid #FFD700 !important; border-radius: 10px !important; }
@@ -136,7 +141,6 @@ st.markdown("""
     .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-height: 500px; width: 230px; }
     .match-box-ko { background: rgba(0, 20, 80, 0.8); border-radius: 8px; border: 1px solid #FFD70044; padding: 10px; margin: 15px 0; }
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 30px; height: 26px; text-align: center; border-radius: 3px; display: flex; align-items: center; justify-content: center; }
-    .logo-epico { filter: drop-shadow(0 0 20px #FFD700); margin-bottom: 10px; }
     
     .date-divider { background: #FFD700; color: black; padding: 5px 20px; font-weight: 900; border-radius: 4px 4px 0 0; font-size: 0.85em; display: inline-block; text-transform: uppercase; }
     .jornada-title { background: rgba(255, 215, 0, 0.2); color: #FFD700; padding: 5px 20px; font-weight: 900; border-radius: 0 0 4px 4px; border-left: 4px solid #FFD700; font-size: 1.1em; margin-bottom: 15px; width: fit-content; margin-left: auto; margin-right: auto; }
@@ -144,7 +148,6 @@ st.markdown("""
     .header-grid { background: rgba(0, 0, 0, 0.3); border-bottom: 2px solid #FFD700; font-weight: 900; text-transform: uppercase; }
     .grid-posiciones { display: grid; grid-template-columns: 300px repeat(8, 42px); align-items: center; padding: 10px 12px; }
     .team-row { border-bottom: 1px solid rgba(125, 177, 255, 0.15); }
-    h4 { color: #FFD700 !important; font-weight: 900; margin-bottom: 5px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -243,6 +246,7 @@ with t_gol:
     if st.session_state.goleadores:
         gols = sorted(st.session_state.goleadores, key=lambda x: int(x.get('goles', 0)), reverse=True)
         l_map = {i['nombre']: i['logo'] for i in st.session_state.equipos.values()}
+        # Usamos ícono o abreviatura para que no se corte en móvil
         html_gol = '<div class="table-container"><div class="main-card"><div class="grid-goleadores header-grid"><span></span><span>EQUIPO</span><span>JUGADOR</span><span style="text-align:center;">GOLES</span></div>'
         for idx, g in enumerate(gols):
             img = f"data:image/png;base64,{img_to_base64(l_map.get(g['equipo']))}" if l_map.get(g['equipo']) else "https://cdn-icons-png.flaticon.com/512/53/53283.png"
@@ -252,7 +256,7 @@ with t_gol:
                 <img src="{img}" width="30">
                 <span class="team-name-wrap" style="font-weight:{'900' if idx==0 else '400'};">{g["equipo"]}</span>
                 <span class="{"top-scorer-name" if idx==0 else ""}" style="font-weight:700; white-space: normal;">{g["nombre"]}</span>
-                <span class="{"top-scorer-goals" if idx==0 else ""}" style="text-align:center;font-weight:900;color:#FFD700;font-size:1.2em;">{g["goles"]}</span>
+                <span class="{"top-scorer-goals" if idx==0 else ""}" style="text-align:center;font-weight:900;color:#FFD700;font-size:1.2em;white-space:nowrap;">{g["goles"]}</span>
             </div>'''
         st.markdown(html_gol + '</div></div>', unsafe_allow_html=True)
 
@@ -293,7 +297,7 @@ with st.sidebar:
                     ngl = st.number_input("GL", value=int(p['goles_l']) if p['goles_l'] is not None else 0, key=f"gl{i}")
                     ngv = st.number_input("GV", value=int(p['goles_v']) if p['goles_v'] is not None else 0, key=f"gv{i}")
                     if st.button("Guardar", key=f"s{i}"):
-                        st.session_state.partidos[i].update({"goles_l": ngl, "goles_v": gv, "titulo": new_t})
+                        st.session_state.partidos[i].update({"goles_l": ngl, "goles_v": ngv, "titulo": new_t})
                         save_to_disk(); st.rerun()
                     if st.button("Borrar", key=f"d{i}"): st.session_state.partidos.pop(i); save_to_disk(); st.rerun()
 
@@ -315,6 +319,7 @@ with st.sidebar:
                     matches = st.session_state.fase_final[ft]
                     if isinstance(matches, list):
                         for i, m in enumerate(matches):
+                            st.write(f"Partido {i+1}")
                             m["L"] = st.selectbox(f"L{ft}{i}", eqs_ko, index=eqs_ko.index(m["L"]) if m["L"] in eqs_ko else 0, key=f"l{ft}{i}")
                             m["V"] = st.selectbox(f"V{ft}{i}", eqs_ko, index=eqs_ko.index(m["V"]) if m["V"] in eqs_ko else 0, key=f"v{ft}{i}")
                             has_r = st.checkbox("¿Resultado?", value=(m["gl"] is not None), key=f"r{ft}{i}")
