@@ -91,7 +91,6 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
     [data-testid="stAppViewContainer"] { background: radial-gradient(circle at top, #00124d 0%, #000422 100%) !important; }
     
-    /* Título Coloreado */
     .txt-celeste { color: #7db1ff !important; }
     .txt-red { color: #ff3b3b !important; }
     .txt-gold { color: #FFD700 !important; }
@@ -100,18 +99,33 @@ st.markdown("""
     @media (max-width: 768px) {
         .nam-title { font-size: 2.2em !important; }
         .main-card { width: 98% !important; min-width: 98% !important; }
-        .grid-goleadores { grid-template-columns: 40px 100px 1fr 50px !important; gap: 8px !important; padding: 10px !important; }
+        /* Móvil: Logo(35px), Equipo(80px), Jugador(Libre), Goles(40px) */
+        .grid-goleadores { grid-template-columns: 35px 80px 1fr 40px !important; gap: 8px !important; padding: 10px !important; }
         .grid-posiciones { grid-template-columns: 110px repeat(8, 30px) !important; font-size: 0.75em !important; overflow-x: auto; }
         .res-team-box { width: 110px !important; font-size: 0.85em !important; }
-        .top-scorer-name { font-size: 1.1em !important; }
     }
 
     .nam-title { font-size: 4em; text-align: center; font-weight: 900; color: white; margin-bottom: 20px; }
     .table-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
     .main-card { background: rgba(0, 10, 60, 0.4); border-radius: 12px; margin-bottom: 25px; border: 1px solid #FFD70033; color: white; backdrop-filter: blur(10px); overflow: hidden; width: fit-content; }
     
-    /* Goleadores y Efectos */
-    .grid-goleadores { display: grid; grid-template-columns: 50px 250px 1fr 80px; align-items: center; padding: 12px 20px; gap: 15px; white-space: nowrap; }
+    /* Goleadores - Cuadrícula Desktop */
+    .grid-goleadores { 
+        display: grid; 
+        grid-template-columns: 50px 180px 1fr 80px; 
+        align-items: center; 
+        padding: 12px 20px; 
+        gap: 15px; 
+    }
+    
+    /* Clase para permitir que el nombre del equipo salte de línea */
+    .team-name-wrap {
+        white-space: normal !important;
+        line-height: 1.1;
+        word-wrap: break-word;
+        color: #7db1ff;
+    }
+
     .top-scorer-card { background: linear-gradient(90deg, rgba(255, 215, 0, 0.18) 0%, rgba(0, 20, 80, 0.6) 100%); border: 2px solid #FFD700 !important; border-radius: 10px !important; }
     .top-scorer-name { font-size: 1.4em !important; color: #FFD700 !important; text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); font-weight: 900 !important; }
     .top-scorer-goals { font-size: 1.8em !important; color: #FFD700 !important; font-weight: 900 !important; }
@@ -124,7 +138,6 @@ st.markdown("""
     .ko-score { background: #FFD700; color: #000; font-weight: 900; width: 30px; height: 26px; text-align: center; border-radius: 3px; display: flex; align-items: center; justify-content: center; }
     .logo-epico { filter: drop-shadow(0 0 20px #FFD700); margin-bottom: 10px; }
     
-    /* Fechas y Títulos */
     .date-divider { background: #FFD700; color: black; padding: 5px 20px; font-weight: 900; border-radius: 4px 4px 0 0; font-size: 0.85em; display: inline-block; text-transform: uppercase; }
     .jornada-title { background: rgba(255, 215, 0, 0.2); color: #FFD700; padding: 5px 20px; font-weight: 900; border-radius: 0 0 4px 4px; border-left: 4px solid #FFD700; font-size: 1.1em; margin-bottom: 15px; width: fit-content; margin-left: auto; margin-right: auto; }
     .res-team-box { display: flex; align-items: center; gap: 10px; width: 280px; }
@@ -237,8 +250,8 @@ with t_gol:
             html_gol += f'''
             <div class="grid-goleadores {is_t}" style="border-bottom:1px solid #ffffff05;">
                 <img src="{img}" width="30">
-                <span style="color:#7db1ff;overflow:hidden;">{g["equipo"]}</span>
-                <span class="{"top-scorer-name" if idx==0 else ""}" style="font-weight:700;overflow:hidden;">{g["nombre"]}</span>
+                <span class="team-name-wrap" style="font-weight:{'900' if idx==0 else '400'};">{g["equipo"]}</span>
+                <span class="{"top-scorer-name" if idx==0 else ""}" style="font-weight:700; white-space: normal;">{g["nombre"]}</span>
                 <span class="{"top-scorer-goals" if idx==0 else ""}" style="text-align:center;font-weight:900;color:#FFD700;font-size:1.2em;">{g["goles"]}</span>
             </div>'''
         st.markdown(html_gol + '</div></div>', unsafe_allow_html=True)
@@ -280,7 +293,7 @@ with st.sidebar:
                     ngl = st.number_input("GL", value=int(p['goles_l']) if p['goles_l'] is not None else 0, key=f"gl{i}")
                     ngv = st.number_input("GV", value=int(p['goles_v']) if p['goles_v'] is not None else 0, key=f"gv{i}")
                     if st.button("Guardar", key=f"s{i}"):
-                        st.session_state.partidos[i].update({"goles_l": ngl, "goles_v": ngv, "titulo": new_t})
+                        st.session_state.partidos[i].update({"goles_l": ngl, "goles_v": gv, "titulo": new_t})
                         save_to_disk(); st.rerun()
                     if st.button("Borrar", key=f"d{i}"): st.session_state.partidos.pop(i); save_to_disk(); st.rerun()
 
@@ -302,10 +315,9 @@ with st.sidebar:
                     matches = st.session_state.fase_final[ft]
                     if isinstance(matches, list):
                         for i, m in enumerate(matches):
-                            st.write(f"Partido {i+1}")
                             m["L"] = st.selectbox(f"L{ft}{i}", eqs_ko, index=eqs_ko.index(m["L"]) if m["L"] in eqs_ko else 0, key=f"l{ft}{i}")
                             m["V"] = st.selectbox(f"V{ft}{i}", eqs_ko, index=eqs_ko.index(m["V"]) if m["V"] in eqs_ko else 0, key=f"v{ft}{i}")
-                            has_r = st.checkbox("¿Tiene resultado?", value=(m["gl"] is not None), key=f"r{ft}{i}")
+                            has_r = st.checkbox("¿Resultado?", value=(m["gl"] is not None), key=f"r{ft}{i}")
                             if has_r:
                                 m["gl"] = st.number_input("GL", value=int(m["gl"]) if m["gl"] is not None else 0, key=f"gl{ft}{i}")
                                 m["gv"] = st.number_input("GV", value=int(m["gv"]) if m["gv"] is not None else 0, key=f"gv{ft}{i}")
